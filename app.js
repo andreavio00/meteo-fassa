@@ -13,6 +13,7 @@ function latestValue(features, field) {
   for (const feature of features) {
     const value = feature.properties[field];
 
+
     if (
       value !== "" &&
       value !== null &&
