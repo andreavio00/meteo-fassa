@@ -1,0 +1,24 @@
+{
+  "vigo": {
+    "name": "Vigo di Fassa",
+    "quota": "1400",
+    "source_url": "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
+    "temp": null,
+    "humidity": null,
+    "wind": null,
+    "windDir": null,
+    "updated": null,
+    "ok": false
+  },
+  "pozza": {
+    "name": "Pozza di Fassa (Monzon)",
+    "quota": "1600",
+    "source_url": "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
+    "temp": null,
+    "humidity": null,
+    "wind": null,
+    "windDir": null,
+    "updated": null,
+    "ok": false
+  }
+}
