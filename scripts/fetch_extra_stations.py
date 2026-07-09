@@ -104,16 +104,15 @@ def parse_vigo():
         r"Umidit[àa][^0-9]{0,15}(\d+[.,]?\d*)\s*%"
     ], text))
 
-    wind = clean_number(first_match([
-        r"Vento\s*[Mm]edio[^0-9]{0,15}(\d+[.,]?\d*)\s*km/h",
-        r"Vel(?:ocit[àa])?\.?\s*[Mm]edia[^0-9]{0,15}(\d+[.,]?\d*)\s*km/h",
-        r"Vento[^0-9]{0,20}(\d+[.,]?\d*)\s*km/h"
-    ], text))
-
-    wind_dir = first_match([
-        rf"Direzione[^A-Z]{{0,15}}\b({WIND_DIRS})\b",
-        rf"Vento[^A-Z]{{0,25}}\b({WIND_DIRS})\b"
-    ], text, flags=0)
+    # Sul widget di Vigo velocita' e direzione compaiono appaiate, es.
+    # "16.1 Km/h NNW", quindi le catturiamo insieme invece di cercarle
+    # vicino alla parola "Vento" (che nel testo puo' essere lontana).
+    wind_match = re.search(
+        r"(\d+[.,]?\d*)\s*Km/h\s*([NSEWO]{1,3})\b",
+        text, re.IGNORECASE
+    )
+    wind = clean_number(wind_match.group(1)) if wind_match else None
+    wind_dir = wind_match.group(2).upper() if wind_match else None
 
     ok = temp is not None
     if not ok:
@@ -122,7 +121,7 @@ def parse_vigo():
 
     return {
         "name": "Vigo di Fassa",
-        "quota": "1400",
+        "quota": "1400 m",
         "source_url": "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
         "temp": temp,
         "humidity": humidity,
@@ -165,9 +164,7 @@ def parse_pozza():
 
     return {
         "name": "Pozza di Fassa (Monzon)",
-        # Quota approssimativa (zona Monzon, sopra Pozza di Fassa):
-        # verificala e correggila se conosci il valore esatto.
-        "quota": "1600",
+        "quota": "1520 m",
         "source_url": url,
         "temp": temp,
         "humidity": humidity,
@@ -186,7 +183,7 @@ def main():
     except Exception as exc:
         print(f"[vigo] ERRORE durante il fetch: {exc}", file=sys.stderr)
         stations["vigo"] = {
-            "name": "Vigo di Fassa", "quota": "1.400 m",
+            "name": "Vigo di Fassa", "quota": "1400 m",
             "temp": None, "humidity": None, "wind": None, "windDir": None,
             "updated": datetime.now(timezone.utc).isoformat(), "ok": False,
         }
@@ -196,7 +193,7 @@ def main():
     except Exception as exc:
         print(f"[pozza] ERRORE durante il fetch: {exc}", file=sys.stderr)
         stations["pozza"] = {
-            "name": "Pozza di Fassa (Monzon)", "quota": "Monzon",
+            "name": "Pozza di Fassa (Monzon)", "quota": "1520 m",
             "temp": None, "humidity": None, "wind": None, "windDir": None,
             "updated": datetime.now(timezone.utc).isoformat(), "ok": False,
         }
