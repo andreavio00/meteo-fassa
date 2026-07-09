@@ -24,9 +24,7 @@ function latestValue(features, field) {
 }
 
 function direction(deg) {
-
-  if (!deg || isNaN(deg))
-    return "-";
+  if (!deg || isNaN(deg)) return "-";
 
   const dirs = [
     "N","NNE","NE","ENE",
@@ -39,7 +37,6 @@ function direction(deg) {
 }
 
 function iconByAltitude(quota) {
-
   const q = parseInt(quota);
 
   if (q < 1600) return "🌲";
@@ -54,11 +51,9 @@ async function loadStation(station) {
     `https://dati.meteotrentino.it/service.asmx/datiRealtimeUnaStazione?stazione=${station.code}&h=1`;
 
   const response = await fetch(url);
-
   const data = await response.json();
 
   const features = data.features;
-
   const latest = features[0].properties;
 
   return {
@@ -79,11 +74,19 @@ async function loadStation(station) {
 
 function createCard(data) {
 
-  const icon =
-    iconByAltitude(data.quota);
+  const icon = iconByAltitude(data.quota);
 
-  const time =
-    data.updated.substring(11,16);
+  const time = data.updated.substring(11,16);
+
+  const humidity =
+    data.humidity !== "-"
+      ? `<div class="value">💧 ${data.humidity}%</div>`
+      : "";
+
+  const wind =
+    data.wind !== "-"
+      ? `<div class="value">💨 ${data.wind} m/s ${data.windDir}</div>`
+      : "";
 
   return `
     <div class="station-card">
@@ -96,17 +99,13 @@ function createCard(data) {
         ${data.quota}
       </div>
 
-      <div class="value">
-        🌡️ ${data.temp} °C
+      <div class="temperature">
+        ${data.temp}°
       </div>
 
-      <div class="value">
-        💧 ${data.humidity} %
-      </div>
+      ${humidity}
 
-      <div class="value">
-        💨 ${data.wind} m/s ${data.windDir}
-      </div>
+      ${wind}
 
       <div class="time">
         🕒 ${time}
@@ -139,15 +138,10 @@ async function loadAllStations() {
 
       html += `
         <div class="station-card">
-
           <div class="station-name">
             ${station.name}
           </div>
-
-          <div>
-            Errore caricamento dati
-          </div>
-
+          <div>Errore caricamento dati</div>
         </div>
       `;
     }
