@@ -1,10 +1,12 @@
 const stations = [
-  { code: "T0096", name: "Moena (Diga Pezzè)" },
-  { code: "T0437", name: "Canazei (Gries)" },
-  { code: "T0094", name: "Passo Costalunga" },
-  { code: "T0229", name: "Campitello (Malga Do Col D'Aura)" },
-  { code: "T0092", name: "Pian Fedaia (Diga)" },
-  { code: "T0403", name: "Canazei (Ciampac)" }
+  { type: "trentino", code: "T0096", name: "Moena (Diga Pezzè)" },
+  { type: "extra", key: "vigo" },
+  { type: "extra", key: "pozza" },
+  { type: "trentino", code: "T0437", name: "Canazei (Gries)" },
+  { type: "trentino", code: "T0094", name: "Passo Costalunga" },
+  { type: "trentino", code: "T0229", name: "Campitello (Malga Do Col D'Aura)" },
+  { type: "trentino", code: "T0092", name: "Pian Fedaia (Diga)" },
+  { type: "trentino", code: "T0403", name: "Canazei (Ciampac)" }
 ];
 
 function latestValue(features, field) {
@@ -72,11 +74,47 @@ async function loadStation(station) {
   };
 }
 
+// Cache del JSON esterno (Vigo/Pozza), scaricato una sola volta per
+// tutte le card che lo usano.
+let extraStationsCache = null;
+
+async function loadExtraStationsData() {
+  if (extraStationsCache) return extraStationsCache;
+
+  try {
+    const response = await fetch("data/extra-stations.json");
+    extraStationsCache = await response.json();
+  } catch (err) {
+    extraStationsCache = {};
+  }
+
+  return extraStationsCache;
+}
+
+function loadExtraStation(key, extraData) {
+  const station = extraData[key];
+
+  if (!station || station.ok === false) {
+    throw new Error(`Dati non disponibili per "${key}"`);
+  }
+
+  return {
+    name: station.name,
+    quota: station.quota,
+    updated: station.updated,
+
+    temp: station.temp !== null && station.temp !== undefined ? station.temp : "-",
+    humidity: station.humidity !== null && station.humidity !== undefined ? station.humidity : "-",
+    wind: station.wind !== null && station.wind !== undefined ? station.wind : "-",
+    windDir: station.windDir || "-"
+  };
+}
+
 function createCard(data) {
 
   const icon = iconByAltitude(data.quota);
 
-  const time = data.updated.substring(11,16);
+  const time = data.updated ? data.updated.substring(11,16) : "--:--";
 
   const humidity =
     data.humidity !== "-"
@@ -123,6 +161,8 @@ async function loadAllStations() {
   container.innerHTML =
     "<p>Caricamento dati...</p>";
 
+  const extraData = await loadExtraStationsData();
+
   let html = "";
 
   for (const station of stations) {
@@ -130,16 +170,23 @@ async function loadAllStations() {
     try {
 
       const data =
-        await loadStation(station);
+        station.type === "extra"
+          ? loadExtraStation(station.key, extraData)
+          : await loadStation(station);
 
       html += createCard(data);
 
     } catch(err) {
 
+      const label =
+        station.type === "extra"
+          ? (extraData[station.key] && extraData[station.key].name) || station.key
+          : station.name;
+
       html += `
         <div class="station-card">
           <div class="station-name">
-            ${station.name}
+            ${label}
           </div>
           <div>Errore caricamento dati</div>
         </div>
