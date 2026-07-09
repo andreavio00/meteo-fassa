@@ -1,60 +1,54 @@
 body {
-
   font-family: Arial, sans-serif;
-
   margin: 0;
-
-  padding: 12px;
-
+  padding: 10px;
   background: #f2f2f2;
 }
 
 h1 {
-
   text-align: center;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
 
-  margin-bottom: 20px;
+#stations {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .station-card {
-
   background: white;
-
   border-radius: 12px;
-
-  padding: 14px;
-
-  margin-bottom: 12px;
-
+  padding: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,.12);
 }
 
 .station-name {
-
-  font-size: 18px;
-
+  font-size: 15px;
   font-weight: bold;
+  line-height: 1.2;
 }
 
 .station-quota {
-
   color: #666;
+  font-size: 12px;
+  margin-top: 2px;
+}
 
-  margin-bottom: 10px;
+.temperature {
+  font-size: 34px;
+  font-weight: bold;
+  margin: 10px 0;
 }
 
 .value {
-
-  margin: 5px 0;
-
-  font-size: 16px;
+  font-size: 14px;
+  margin-top: 4px;
 }
 
 .time {
-
-  margin-top: 10px;
-
+  margin-top: 8px;
   color: #666;
-
-  font-size: 14px;
+  font-size: 12px;
 }
