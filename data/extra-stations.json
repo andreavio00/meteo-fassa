@@ -3,22 +3,22 @@
     "name": "Vigo di Fassa",
     "quota": "1400 m",
     "source_url": "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
-    "temp": 28.1,
-    "humidity": 41.0,
-    "wind": 3.1,
-    "windDir": "SE",
-    "updated": "2026-07-31T11:46:02.390114+00:00",
+    "temp": 24.7,
+    "humidity": 42.0,
+    "wind": 3.6,
+    "windDir": "SSW",
+    "updated": "2026-07-31T13:28:23.402395+00:00",
     "ok": true
   },
   "pozza": {
     "name": "Pozza di Fassa (Monzon)",
     "quota": "1520 m",
     "source_url": "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
-    "temp": 26.3,
-    "humidity": 48.0,
-    "wind": 1.5,
-    "windDir": null,
-    "updated": "2026-07-31T11:46:07.113264+00:00",
+    "temp": 22.0,
+    "humidity": 62.0,
+    "wind": 1.6,
+    "windDir": "N",
+    "updated": "2026-07-31T13:28:24.729143+00:00",
     "ok": true
   }
 }
