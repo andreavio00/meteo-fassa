@@ -7,7 +7,7 @@
     "humidity": 92.0,
     "wind": 0.4,
     "windDir": "WNW",
-    "updated": "2026-08-01T15:33:35.575819+00:00",
+    "updated": "2026-08-01T16:35:34.784650+00:00",
     "ok": true
   },
   "pozza": {
@@ -15,10 +15,10 @@
     "quota": "1520 m",
     "source_url": "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
     "temp": 24.1,
-    "humidity": 55.0,
+    "humidity": 57.0,
     "wind": 1.6,
     "windDir": null,
-    "updated": "2026-08-01T15:33:37.195398+00:00",
+    "updated": "2026-08-01T16:35:35.852330+00:00",
     "ok": true
   }
 }
