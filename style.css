@@ -53,4 +53,15 @@ h1 {
   font-size: 12px;
 }
 
+.station-card.stale {
+  border: 1px solid #f0ad4e;
+}
+
+.stale-warning {
+  margin-top: 6px;
+  color: #b06a00;
+  font-size: 11px;
+  font-weight: bold;
+}
+
 

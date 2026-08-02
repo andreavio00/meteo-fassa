@@ -34,6 +34,10 @@ const ITA_TO_EN_DIR = {
   O: "W", ONO: "WNW", NO: "NW", NNO: "NNW"
 };
 
+// Oltre questa soglia (minuti) un dato "extra" viene segnalato come
+// non aggiornato di recente (punto 4).
+const STALE_THRESHOLD_MIN = 60;
+
 function latestValue(features, field) {
   for (const feature of features) {
     const value = feature.properties[field];
@@ -72,12 +76,95 @@ function iconByAltitude(quota) {
   return "🏔️";
 }
 
+// ---- Fuso orario (gestione ora legale/solare) ----
+
+function romeTimeParts(date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Rome",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(date);
+
+  return {
+    hh: parseInt(parts.find(p => p.type === "hour").value, 10),
+    mm: parseInt(parts.find(p => p.type === "minute").value, 10)
+  };
+}
+
+function timeStringFromParts(hh, mm) {
+  const HH = String(hh).padStart(2, "0");
+  const MM = String(mm).padStart(2, "0");
+  return `1970-01-01T${HH}:${MM}`;
+}
+
+// Ora attuale in Italia (gestisce da sola ora legale/solare), nel
+// formato "...THH:MM" atteso da createCard().
+function romeTimeNowString() {
+  const { hh, mm } = romeTimeParts(new Date());
+  return timeStringFromParts(hh, mm);
+}
+
+function nowMinutesOfDayRome() {
+  const { hh, mm } = romeTimeParts(new Date());
+  return hh * 60 + mm;
+}
+
+function minutesToTimeString(mins) {
+  return timeStringFromParts(Math.floor(mins / 60) % 24, mins % 60);
+}
+
+// Converte un orario "HH:MM" letto sul sito sorgente (gia' in ora
+// locale italiana) in minuti dalla mezzanotte, per poter calcolare da
+// quanto tempo il dato non viene aggiornato.
+function isStale(sourceMinutes) {
+  if (sourceMinutes === null) return false;
+
+  let diff = nowMinutesOfDayRome() - sourceMinutes;
+  if (diff < 0) diff += 24 * 60; // rollover oltre la mezzanotte
+
+  return diff > STALE_THRESHOLD_MIN;
+}
+
+// Converte il campo "datetime" restituito dall'API di meteotrentino.it
+// nell'ora locale italiana corretta (l'API non indica un fuso orario
+// nella stringa, quindi va assunto UTC: senza questa conversione, in
+// estate l'orario mostrato resta indietro di un'ora per via dell'ora
+// legale non applicata).
+function formatRomeTimeFromApi(dateStr) {
+  if (!dateStr) return null;
+
+  let normalized = String(dateStr).trim().replace(" ", "T");
+  if (!/[Zz]|[+\-]\d{2}:?\d{2}$/.test(normalized)) {
+    normalized += "Z";
+  }
+
+  const d = new Date(normalized);
+  if (isNaN(d.getTime())) return null;
+
+  const { hh, mm } = romeTimeParts(d);
+  return timeStringFromParts(hh, mm);
+}
+
+// ---- Fetch con timeout, per non bloccare a lungo il caricamento ----
+
+async function fetchWithTimeout(url, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function loadStation(station) {
 
   const url =
     `https://dati.meteotrentino.it/service.asmx/datiRealtimeUnaStazione?stazione=${station.code}&h=1`;
 
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url, 10000);
   const data = await response.json();
 
   const features = data.features;
@@ -86,7 +173,7 @@ async function loadStation(station) {
   return {
     name: station.name,
     quota: latest["quota"],
-    updated: latest["datetime"],
+    updated: formatRomeTimeFromApi(latest["datetime"]) || latest["datetime"],
 
     temp: latestValue(features, "ta(°C)"),
     humidity: latestValue(features, "umid(%)"),
@@ -117,24 +204,6 @@ function itaDirToEn(raw) {
   return ITA_TO_EN_DIR[raw.toUpperCase()] || raw.toUpperCase();
 }
 
-// Restituisce una stringa nel formato "...THH:MM" con l'ora locale
-// italiana (gestisce da sola il passaggio ora legale/solare), cosi'
-// che createCard() possa estrarla con lo stesso substring(11,16) usato
-// per tutte le altre card.
-function romeTimeNowString() {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Europe/Rome",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  }).formatToParts(new Date());
-
-  const hh = parts.find(p => p.type === "hour").value;
-  const mm = parts.find(p => p.type === "minute").value;
-
-  return `1970-01-01T${hh}:${mm}`;
-}
-
 // Scarica una pagina pubblica passando da un proxy CORS (il sito
 // sorgente non espone un'API ne' permette il fetch diretto da browser)
 // e ne restituisce il solo testo visibile (senza script/style).
@@ -142,7 +211,7 @@ async function fetchPageText(url) {
   const proxyUrl =
     "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
 
-  const response = await fetch(proxyUrl);
+  const response = await fetchWithTimeout(proxyUrl, 9000);
   if (!response.ok) throw new Error("Proxy non disponibile");
 
   const html = await response.text();
@@ -151,6 +220,29 @@ async function fetchPageText(url) {
   doc.querySelectorAll("script, style").forEach(el => el.remove());
 
   return doc.body ? doc.body.textContent : "";
+}
+
+// Cerca sulla pagina l'orario di ultimo aggiornamento dichiarato dalla
+// fonte stessa (non quello dello scraping), nei formati usati dai due
+// siti, e un eventuale indicatore "OFFLINE".
+function extractSourceStatus(text) {
+  let m = text.match(
+    /Dati aggiornati il\s*\d{1,2}\/\d{1,2}\/\d{2,4}\s*alle ore\s*(\d{1,2})[.:](\d{2})/i
+  );
+
+  if (!m) {
+    m = text.match(
+      /Dati ore\s*(\d{1,2}):(\d{2})\s*del\s*\d{1,2}\/\d{1,2}\/\d{2,4}/i
+    );
+  }
+
+  const updatedMinutes = m
+    ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10)
+    : null;
+
+  const offline = /\bOFFLINE\b/.test(text) && !/\bONLINE\b/.test(text);
+
+  return { updatedMinutes, offline };
 }
 
 function parseVigoText(text) {
@@ -171,7 +263,8 @@ function parseVigoText(text) {
     temp,
     humidity,
     wind: kmhToMs(windKmh),
-    windDir: itaDirToEn(windDir)
+    windDir: itaDirToEn(windDir),
+    ...extractSourceStatus(text)
   };
 }
 
@@ -197,7 +290,8 @@ function parsePozzaText(text) {
     temp,
     humidity,
     wind: kmhToMs(windKmh),
-    windDir: itaDirToEn(dirMatch ? dirMatch[1] : null)
+    windDir: itaDirToEn(dirMatch ? dirMatch[1] : null),
+    ...extractSourceStatus(text)
   };
 }
 
@@ -214,7 +308,7 @@ async function loadFallbackData() {
   if (fallbackCache) return fallbackCache;
 
   try {
-    const response = await fetch("data/extra-stations.json");
+    const response = await fetchWithTimeout("data/extra-stations.json", 5000);
     fallbackCache = await response.json();
   } catch (err) {
     fallbackCache = {};
@@ -233,10 +327,15 @@ async function loadExtraStation(key) {
 
     if (parsed.temp === null) throw new Error("Temperatura non trovata");
 
+    const updated = parsed.updatedMinutes !== null
+      ? minutesToTimeString(parsed.updatedMinutes)
+      : romeTimeNowString();
+
     return {
       name: config.name,
       quota: config.quota,
-      updated: romeTimeNowString(),
+      updated,
+      stale: parsed.offline || isStale(parsed.updatedMinutes),
 
       temp: parsed.temp,
       humidity: parsed.humidity !== null ? parsed.humidity : "-",
@@ -256,6 +355,7 @@ async function loadExtraStation(key) {
       name: station.name,
       quota: station.quota,
       updated: station.updated,
+      stale: station.stale !== undefined ? station.stale : true,
 
       temp: station.temp !== null && station.temp !== undefined ? station.temp : "-",
       humidity: station.humidity !== null && station.humidity !== undefined ? station.humidity : "-",
@@ -281,8 +381,12 @@ function createCard(data) {
       ? `<div class="value">💨 ${data.wind} m/s ${data.windDir}</div>`
       : "";
 
+  const staleWarning = data.stale
+    ? `<div class="stale-warning">⚠️ dato non aggiornato di recente</div>`
+    : "";
+
   return `
-    <div class="station-card">
+    <div class="station-card${data.stale ? " stale" : ""}">
 
       <div class="station-name">
         ${icon} ${data.name}
@@ -304,6 +408,8 @@ function createCard(data) {
         🕒 ${time}
       </div>
 
+      ${staleWarning}
+
     </div>
   `;
 }
@@ -316,38 +422,40 @@ async function loadAllStations() {
   container.innerHTML =
     "<p>Caricamento dati...</p>";
 
-  let html = "";
+  // Tutte le stazioni vengono caricate in parallelo (non una dopo
+  // l'altra): questo velocizza molto il caricamento della pagina,
+  // ed evita che una fonte lenta blocchi tutte le altre.
+  const cardsHtml = await Promise.all(
+    stations.map(async (station) => {
+      try {
 
-  for (const station of stations) {
+        const data =
+          station.type === "extra"
+            ? await loadExtraStation(station.key)
+            : await loadStation(station);
 
-    try {
+        return createCard(data);
 
-      const data =
-        station.type === "extra"
-          ? await loadExtraStation(station.key)
-          : await loadStation(station);
+      } catch (err) {
 
-      html += createCard(data);
+        const label =
+          station.type === "extra"
+            ? EXTRA_STATIONS[station.key].name
+            : station.name;
 
-    } catch(err) {
-
-      const label =
-        station.type === "extra"
-          ? EXTRA_STATIONS[station.key].name
-          : station.name;
-
-      html += `
-        <div class="station-card">
-          <div class="station-name">
-            ${label}
+        return `
+          <div class="station-card">
+            <div class="station-name">
+              ${label}
+            </div>
+            <div>Errore caricamento dati</div>
           </div>
-          <div>Errore caricamento dati</div>
-        </div>
-      `;
-    }
-  }
+        `;
+      }
+    })
+  );
 
-  container.innerHTML = html;
+  container.innerHTML = cardsHtml.join("");
 }
 
 loadAllStations();
