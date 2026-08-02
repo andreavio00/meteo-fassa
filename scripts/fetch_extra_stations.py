@@ -21,10 +21,13 @@ null, così il sito continua a funzionare (la card mostrerà "-").
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
 from bs4 import BeautifulSoup
+
+ROME_TZ = ZoneInfo("Europe/Rome")
 
 TIMEOUT = 20
 HEADERS = {
@@ -79,6 +82,36 @@ def first_match(patterns, text, flags=re.IGNORECASE):
     return None
 
 
+def source_status(text):
+    """Cerca l'orario di ultimo aggiornamento dichiarato dalla pagina
+    stessa (non quello dello scraping) e un eventuale indicatore
+    "OFFLINE", cosi' da poter segnalare un dato vecchio anche nel JSON
+    di riserva."""
+    m = re.search(
+        r"Dati aggiornati il\s*\d{1,2}/\d{1,2}/\d{2,4}\s*alle ore\s*"
+        r"(\d{1,2})[.:](\d{2})",
+        text, re.IGNORECASE
+    )
+    if not m:
+        m = re.search(
+            r"Dati ore\s*(\d{1,2}):(\d{2})\s*del\s*\d{1,2}/\d{1,2}/\d{2,4}",
+            text, re.IGNORECASE
+        )
+
+    source_updated = None
+    if m:
+        now = datetime.now(ROME_TZ)
+        source_updated = now.replace(
+            hour=int(m.group(1)), minute=int(m.group(2)),
+            second=0, microsecond=0
+        ).isoformat()
+
+    offline = bool(re.search(r"\bOFFLINE\b", text)) and \
+        not re.search(r"\bONLINE\b", text)
+
+    return source_updated, offline
+
+
 def fetch_text(url):
     resp = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
     resp.raise_for_status()
@@ -119,6 +152,9 @@ def parse_vigo():
         print("[vigo] ATTENZIONE: non ho trovato la temperatura, "
               "controlla la struttura della pagina.", file=sys.stderr)
 
+    source_updated, offline = source_status(text)
+    stale = offline or source_updated is None
+
     return {
         "name": "Vigo di Fassa",
         "quota": "1400 m",
@@ -127,7 +163,8 @@ def parse_vigo():
         "humidity": humidity,
         "wind": kmh_to_ms(wind),
         "windDir": ita_dir_to_en(wind_dir),
-        "updated": datetime.now(timezone.utc).isoformat(),
+        "updated": source_updated or datetime.now(ROME_TZ).isoformat(),
+        "stale": stale,
         "ok": ok,
     }
 
@@ -162,6 +199,9 @@ def parse_pozza():
               "controlla la struttura della pagina (la stazione "
               "potrebbe anche essere offline).", file=sys.stderr)
 
+    source_updated, offline = source_status(text)
+    stale = offline or source_updated is None
+
     return {
         "name": "Pozza di Fassa (Monzon)",
         "quota": "1520 m",
@@ -170,7 +210,8 @@ def parse_pozza():
         "humidity": humidity,
         "wind": kmh_to_ms(wind),
         "windDir": ita_dir_to_en(wind_dir),
-        "updated": datetime.now(timezone.utc).isoformat(),
+        "updated": source_updated or datetime.now(ROME_TZ).isoformat(),
+        "stale": stale,
         "ok": ok,
     }
 
@@ -185,7 +226,8 @@ def main():
         stations["vigo"] = {
             "name": "Vigo di Fassa", "quota": "1400 m",
             "temp": None, "humidity": None, "wind": None, "windDir": None,
-            "updated": datetime.now(timezone.utc).isoformat(), "ok": False,
+            "updated": datetime.now(ROME_TZ).isoformat(),
+            "stale": True, "ok": False,
         }
 
     try:
@@ -195,7 +237,8 @@ def main():
         stations["pozza"] = {
             "name": "Pozza di Fassa (Monzon)", "quota": "1520 m",
             "temp": None, "humidity": None, "wind": None, "windDir": None,
-            "updated": datetime.now(timezone.utc).isoformat(), "ok": False,
+            "updated": datetime.now(ROME_TZ).isoformat(),
+            "stale": True, "ok": False,
         }
 
     with open("data/extra-stations.json", "w", encoding="utf-8") as f:
