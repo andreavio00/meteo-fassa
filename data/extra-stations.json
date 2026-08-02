@@ -7,18 +7,18 @@
     "humidity": 92.0,
     "wind": 0.4,
     "windDir": "WNW",
-    "updated": "2026-08-02T04:36:29.049455+00:00",
+    "updated": "2026-08-02T07:15:17.616872+00:00",
     "ok": true
   },
   "pozza": {
     "name": "Pozza di Fassa (Monzon)",
     "quota": "1520 m",
     "source_url": "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
-    "temp": 13.0,
-    "humidity": 91.0,
-    "wind": 1.4,
-    "windDir": null,
-    "updated": "2026-08-02T04:36:30.551181+00:00",
+    "temp": 17.4,
+    "humidity": 84.0,
+    "wind": 1.5,
+    "windDir": "NNE",
+    "updated": "2026-08-02T07:15:19.049082+00:00",
     "ok": true
   }
 }
