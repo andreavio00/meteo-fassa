@@ -204,22 +204,35 @@ function itaDirToEn(raw) {
   return ITA_TO_EN_DIR[raw.toUpperCase()] || raw.toUpperCase();
 }
 
-// Scarica una pagina pubblica passando da un proxy CORS (il sito
-// sorgente non espone un'API ne' permette il fetch diretto da browser)
-// e ne restituisce il solo testo visibile (senza script/style).
+// Proviamo piu' proxy CORS in sequenza: quello gratuito puo' essere
+// lento o temporaneamente sovraccarico, quindi se il primo fallisce
+// tentiamo un secondo prima di arrenderci e usare il JSON di riserva.
+const CORS_PROXIES = [
+  url => "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+  url => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url)
+];
+
 async function fetchPageText(url) {
-  const proxyUrl =
-    "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+  let lastErr = new Error("Nessun proxy CORS disponibile");
 
-  const response = await fetchWithTimeout(proxyUrl, 9000);
-  if (!response.ok) throw new Error("Proxy non disponibile");
+  for (const buildProxyUrl of CORS_PROXIES) {
+    try {
+      const response = await fetchWithTimeout(buildProxyUrl(url), 6000);
+      if (!response.ok) throw new Error("Proxy risposta non ok: " + response.status);
 
-  const html = await response.text();
+      const html = await response.text();
+      if (!html || html.length < 50) throw new Error("Risposta vuota dal proxy");
 
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  doc.querySelectorAll("script, style").forEach(el => el.remove());
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      doc.querySelectorAll("script, style").forEach(el => el.remove());
 
-  return doc.body ? doc.body.textContent : "";
+      return doc.body ? doc.body.textContent : "";
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  throw lastErr;
 }
 
 // Cerca sulla pagina l'orario di ultimo aggiornamento dichiarato dalla
@@ -336,6 +349,7 @@ async function loadExtraStation(key) {
       quota: config.quota,
       updated,
       stale: parsed.offline || isStale(parsed.updatedMinutes),
+      source: "live",
 
       temp: parsed.temp,
       humidity: parsed.humidity !== null ? parsed.humidity : "-",
@@ -356,6 +370,7 @@ async function loadExtraStation(key) {
       quota: station.quota,
       updated: station.updated,
       stale: station.stale !== undefined ? station.stale : true,
+      source: "fallback",
 
       temp: station.temp !== null && station.temp !== undefined ? station.temp : "-",
       humidity: station.humidity !== null && station.humidity !== undefined ? station.humidity : "-",
@@ -382,7 +397,9 @@ function createCard(data) {
       : "";
 
   const staleWarning = data.stale
-    ? `<div class="stale-warning">⚠️ dato non aggiornato di recente</div>`
+    ? (data.source === "fallback"
+        ? `<div class="stale-warning">⚠️ lettura live non riuscita, dato di riserva</div>`
+        : `<div class="stale-warning">⚠️ dato non aggiornato di recente</div>`)
     : "";
 
   return `
