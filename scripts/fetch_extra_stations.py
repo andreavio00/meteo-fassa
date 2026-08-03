@@ -153,7 +153,7 @@ def parse_vigo():
               "controlla la struttura della pagina.", file=sys.stderr)
 
     source_updated, offline = source_status(text)
-    stale = offline or source_updated is None
+    stale = offline  # se non troviamo l'orario dichiarato, non e' un errore: assumiamo dato valido, coerente con app.js
 
     return {
         "name": "Vigo di Fassa",
@@ -200,7 +200,7 @@ def parse_pozza():
               "potrebbe anche essere offline).", file=sys.stderr)
 
     source_updated, offline = source_status(text)
-    stale = offline or source_updated is None
+    stale = offline  # se non troviamo l'orario dichiarato, non e' un errore: assumiamo dato valido, coerente con app.js
 
     return {
         "name": "Pozza di Fassa (Monzon)",
