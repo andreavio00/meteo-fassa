@@ -434,8 +434,8 @@ const DETAIL_CONFIG = {
     frameWidth: 380,
     frameHeight: 1800,
     scale: 1,
-    offsetX: 20,
-    offsetY: -650
+    offsetX: -30,
+    offsetY: -750
   }
 };
 
