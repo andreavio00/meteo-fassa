@@ -337,11 +337,19 @@ const PARSERS = {
 // usato solo se la lettura dal vivo fallisce. Scaricato una sola volta.
 let fallbackCache = null;
 
+// Leggiamo il JSON di riserva direttamente da raw.githubusercontent.com
+// invece che dal dominio di GitHub Pages: quest'ultimo deve prima
+// "ricostruire" il sito ad ogni commit (anche mezz'ora di ritardo),
+// mentre il contenuto grezzo del repository e' visibile in pochi
+// secondi/minuti dal commit.
+const FALLBACK_JSON_URL =
+  "https://raw.githubusercontent.com/andreavio00/meteo-fassa/main/data/extra-stations.json";
+
 async function loadFallbackData() {
   if (fallbackCache) return fallbackCache;
 
   try {
-    const response = await fetchWithTimeout("data/extra-stations.json", 5000);
+    const response = await fetchWithTimeout(FALLBACK_JSON_URL, 5000);
     fallbackCache = await response.json();
   } catch (err) {
     fallbackCache = {};
