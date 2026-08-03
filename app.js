@@ -423,19 +423,19 @@ async function loadExtraStation(key) {
 const DETAIL_CONFIG = {
   vigo: {
     url: "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
-    frameWidth: 420,
-    frameHeight: 1100,
-    scale: 1.6,
-    offsetX: -10,
-    offsetY: -430
+    frameWidth: 380,
+    frameHeight: 1600,
+    scale: 1,
+    offsetX: 0,
+    offsetY: -1100
   },
   pozza: {
     url: "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
-    frameWidth: 420,
-    frameHeight: 1300,
-    scale: 1.6,
-    offsetX: -10,
-    offsetY: -430
+    frameWidth: 380,
+    frameHeight: 1800,
+    scale: 1,
+    offsetX: 0,
+    offsetY: -1100
   }
 };
 
