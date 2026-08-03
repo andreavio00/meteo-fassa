@@ -21,6 +21,18 @@
 <div id="stations">
 </div>
 
+<div id="detail-modal" class="modal hidden">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    <div class="modal-frame-wrap">
+      <iframe id="detail-iframe" title="Dati sorgente"></iframe>
+    </div>
+    <a id="modal-open-link" class="modal-open-link" href="#" target="_blank" rel="noopener">
+      Apri il sito completo ↗
+    </a>
+  </div>
+</div>
+
 <script src="app.js"></script>
 
 </body>

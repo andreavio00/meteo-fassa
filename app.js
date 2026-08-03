@@ -414,7 +414,74 @@ async function loadExtraStation(key) {
   }
 }
 
-function createCard(data) {
+// Configurazione del riquadro "fonte dati" mostrato al tocco sulla
+// card di Vigo/Pozza: la pagina sorgente viene caricata a una
+// larghezza "virtuale" (frameWidth/frameHeight) e poi ritagliata e
+// ingrandita (scale + offset) per mostrare solo la zona con la
+// temperatura. Questi numeri sono una prima stima: quasi certamente
+// andranno tarati dopo aver visto come renderizza sul telefono.
+const DETAIL_CONFIG = {
+  vigo: {
+    url: "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
+    frameWidth: 420,
+    frameHeight: 1100,
+    scale: 1.6,
+    offsetX: -10,
+    offsetY: -430
+  },
+  pozza: {
+    url: "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
+    frameWidth: 420,
+    frameHeight: 1300,
+    scale: 1.6,
+    offsetX: -10,
+    offsetY: -430
+  }
+};
+
+let detailFallbackTimer = null;
+
+function openDetailModal(key) {
+  const config = DETAIL_CONFIG[key];
+  if (!config) return;
+
+  const modal = document.getElementById("detail-modal");
+  const iframe = document.getElementById("detail-iframe");
+  const openLink = document.getElementById("modal-open-link");
+
+  openLink.href = config.url;
+
+  iframe.style.width = config.frameWidth + "px";
+  iframe.style.height = config.frameHeight + "px";
+  iframe.style.transformOrigin = "top left";
+  iframe.style.transform =
+    `translate(${config.offsetX}px, ${config.offsetY}px) scale(${config.scale})`;
+
+  let loaded = false;
+  iframe.onload = () => { loaded = true; };
+  iframe.src = config.url;
+
+  modal.classList.remove("hidden");
+
+  clearTimeout(detailFallbackTimer);
+  detailFallbackTimer = setTimeout(() => {
+    if (!loaded) {
+      closeDetailModal();
+      window.open(config.url, "_blank", "noopener");
+    }
+  }, 3000);
+}
+
+function closeDetailModal() {
+  const modal = document.getElementById("detail-modal");
+  const iframe = document.getElementById("detail-iframe");
+
+  modal.classList.add("hidden");
+  iframe.src = "about:blank";
+  clearTimeout(detailFallbackTimer);
+}
+
+function createCard(data, extraKey) {
 
   const icon = iconByAltitude(data.quota);
 
@@ -436,8 +503,14 @@ function createCard(data) {
         : `<div class="stale-warning">⚠️ dato non aggiornato di recente</div>`)
     : "";
 
+  const clickable = extraKey ? " clickable" : "";
+  const onClick = extraKey ? ` onclick="openDetailModal('${extraKey}')"` : "";
+  const tapHint = extraKey
+    ? `<div class="tap-hint">👆 tocca per la fonte</div>`
+    : "";
+
   return `
-    <div class="station-card${data.stale ? " stale" : ""}">
+    <div class="station-card${data.stale ? " stale" : ""}${clickable}"${onClick}>
 
       <div class="station-name">
         ${icon} ${data.name}
@@ -460,6 +533,8 @@ function createCard(data) {
       </div>
 
       ${staleWarning}
+
+      ${tapHint}
 
     </div>
   `;
@@ -485,7 +560,7 @@ async function loadAllStations() {
             ? await loadExtraStation(station.key)
             : await loadStation(station);
 
-        return createCard(data);
+        return createCard(data, station.type === "extra" ? station.key : null);
 
       } catch (err) {
 
