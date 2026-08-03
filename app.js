@@ -415,16 +415,20 @@ async function loadExtraStation(key) {
 }
 
 // Configurazione del riquadro "fonte dati" mostrato al tocco sulla
-// card di Vigo/Pozza: la pagina sorgente viene caricata a una
-// larghezza "virtuale" (frameWidth/frameHeight) e poi ritagliata e
-// ingrandita (scale + offset) per mostrare solo la zona con la
-// temperatura. Questi numeri sono una prima stima: quasi certamente
-// andranno tarati dopo aver visto come renderizza sul telefono.
+// card: la pagina sorgente viene caricata a una larghezza "virtuale"
+// (frameWidth/frameHeight) e poi ritagliata e ingrandita (scale +
+// offset) per mostrare solo la zona con la temperatura. Questi numeri
+// sono una prima stima: quasi certamente andranno tarati dopo aver
+// visto come renderizza sul telefono.
 const DETAIL_CONFIG = {
+  // Puntiamo direttamente al widget (non alla pagina di Dolomiti Meteo
+  // che lo contiene): quella pagina mostra i dati tramite un iframe
+  // annidato al suo interno, e un iframe dentro un altro iframe spesso
+  // non si carica bene nel browser.
   vigo: {
-    url: "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
+    url: "https://stazioni.meteoproject.it/dati/vigodifassa/tabella-vuota.php",
     frameWidth: 380,
-    frameHeight: 1600,
+    frameHeight: 700,
     scale: 1,
     offsetX: 0,
     offsetY: 0
@@ -434,8 +438,21 @@ const DETAIL_CONFIG = {
     frameWidth: 380,
     frameHeight: 1800,
     scale: 1,
-    offsetX: -35,
-    offsetY: -810
+    offsetX: 0,
+    offsetY: -1100
+  },
+  // Un'unica configurazione condivisa da tutte le stazioni ufficiali
+  // di meteotrentino.it: la pagina elenca tutte le stazioni della rete,
+  // qui la ritagliamo per mostrare (circa) solo quelle della Val di
+  // Fassa. Non ho potuto verificare dal vivo il layout di questa
+  // pagina: i valori sono un punto di partenza da tarare insieme.
+  trentino: {
+    url: "https://www.meteotrentino.it/dati/meteo/",
+    frameWidth: 380,
+    frameHeight: 2000,
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0
   }
 };
 
@@ -560,7 +577,7 @@ async function loadAllStations() {
             ? await loadExtraStation(station.key)
             : await loadStation(station);
 
-        return createCard(data, station.type === "extra" ? station.key : null);
+        return createCard(data, station.type === "extra" ? station.key : "trentino");
 
       } catch (err) {
 
