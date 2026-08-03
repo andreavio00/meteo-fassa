@@ -232,12 +232,18 @@ const CORS_PROXIES = [
   url => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url)
 ];
 
+function withCacheBuster(url) {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}_ts=${Date.now()}`;
+}
+
 async function fetchPageText(url) {
   let lastErr = new Error("Nessun proxy CORS disponibile");
+  const bustedUrl = withCacheBuster(url);
 
   for (const buildProxyUrl of CORS_PROXIES) {
     try {
-      const response = await fetchWithTimeout(buildProxyUrl(url), 6000);
+      const response = await fetchWithTimeout(buildProxyUrl(bustedUrl), 6000);
       if (!response.ok) throw new Error("Proxy risposta non ok: " + response.status);
 
       const html = await response.text();
