@@ -427,7 +427,7 @@ const DETAIL_CONFIG = {
     frameHeight: 1600,
     scale: 1,
     offsetX: 0,
-    offsetY: -500
+    offsetY: 0
   },
   pozza: {
     url: "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
@@ -435,7 +435,7 @@ const DETAIL_CONFIG = {
     frameHeight: 1800,
     scale: 1,
     offsetX: 0,
-    offsetY: -500
+    offsetY: -550
   }
 };
 
