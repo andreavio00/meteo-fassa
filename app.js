@@ -126,23 +126,43 @@ function isStale(sourceMinutes) {
   return diff > STALE_THRESHOLD_MIN;
 }
 
-// Converte il campo "datetime" restituito dall'API di meteotrentino.it
-// nell'ora locale italiana corretta (l'API non indica un fuso orario
-// nella stringa, quindi va assunto UTC: senza questa conversione, in
-// estate l'orario mostrato resta indietro di un'ora per via dell'ora
-// legale non applicata).
+// L'API di meteotrentino.it restituisce l'orario come se fosse
+// sempre "ora solare" (CET, UTC+1), senza mai applicare l'ora legale:
+// quando in Italia vige l'ora legale (CEST, UTC+2) il valore mostrato
+// resta quindi indietro di un'ora. Rileviamo se oggi e' in vigore
+// l'ora legale confrontando l'offset UTC attuale di Europe/Rome con
+// quello di un giorno di gennaio (sempre ora solare), e in tal caso
+// aggiungiamo l'ora mancante.
+function getRomeUtcOffsetMinutes(date) {
+  const part = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Rome",
+    timeZoneName: "shortOffset"
+  }).formatToParts(date).find(p => p.type === "timeZoneName").value;
+
+  const match = part.match(/GMT([+\-]\d+)/);
+  return match ? parseInt(match[1], 10) * 60 : 60;
+}
+
+function isRomeCurrentlyDST() {
+  const now = new Date();
+  const januaryOffset = getRomeUtcOffsetMinutes(new Date(now.getFullYear(), 0, 5));
+  const currentOffset = getRomeUtcOffsetMinutes(now);
+  return currentOffset !== januaryOffset;
+}
+
 function formatRomeTimeFromApi(dateStr) {
   if (!dateStr) return null;
 
-  let normalized = String(dateStr).trim().replace(" ", "T");
-  if (!/[Zz]|[+\-]\d{2}:?\d{2}$/.test(normalized)) {
-    normalized += "Z";
+  const m = String(dateStr).match(/(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+
+  let hh = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+
+  if (isRomeCurrentlyDST()) {
+    hh = (hh + 1) % 24;
   }
 
-  const d = new Date(normalized);
-  if (isNaN(d.getTime())) return null;
-
-  const { hh, mm } = romeTimeParts(d);
   return timeStringFromParts(hh, mm);
 }
 
