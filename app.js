@@ -438,8 +438,8 @@ const DETAIL_CONFIG = {
     frameWidth: 380,
     frameHeight: 1800,
     scale: 1,
-    offsetX: 0,
-    offsetY: -1100
+    offsetX: -35,
+    offsetY: -810
   },
   // Un'unica configurazione condivisa da tutte le stazioni ufficiali
   // di meteotrentino.it: la pagina elenca tutte le stazioni della rete,
@@ -449,10 +449,10 @@ const DETAIL_CONFIG = {
   trentino: {
     url: "https://www.meteotrentino.it/dati/meteo/",
     frameWidth: 380,
-    frameHeight: 2000,
-    scale: 1,
-    offsetX: 0,
-    offsetY: 0
+    frameHeight: 2200,
+    scale: 2.46,
+    offsetX: -554,
+    offsetY: -380
   }
 };
 
