@@ -448,11 +448,7 @@ const DETAIL_CONFIG = {
   // pagina: i valori sono un punto di partenza da tarare insieme.
   trentino: {
     url: "https://www.meteotrentino.it/dati/meteo/",
-    frameWidth: 380,
-    frameHeight: 2200,
-    scale: 2.46,
-    offsetX: -554,
-    offsetY: -380
+    noEmbed: true
   }
 };
 
@@ -461,6 +457,15 @@ let detailFallbackTimer = null;
 function openDetailModal(key) {
   const config = DETAIL_CONFIG[key];
   if (!config) return;
+
+  // Alcuni siti (tipicamente quelli istituzionali/PA, come
+  // meteotrentino.it) impediscono esplicitamente di essere mostrati in
+  // un iframe altrui: per questi non ha senso aprire il riquadro e
+  // aspettare invano, apriamo subito la pagina intera.
+  if (config.noEmbed) {
+    window.open(config.url, "_blank", "noopener");
+    return;
+  }
 
   const modal = document.getElementById("detail-modal");
   const iframe = document.getElementById("detail-iframe");
