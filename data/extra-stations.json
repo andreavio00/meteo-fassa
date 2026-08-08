@@ -3,11 +3,11 @@
     "name": "Vigo di Fassa",
     "quota": "1400 m",
     "source_url": "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
-    "temp": 24.1,
-    "humidity": 55.0,
-    "wind": 1.8,
-    "windDir": "SSE",
-    "updated": "2026-08-08T17:17:00+02:00",
+    "temp": 23.9,
+    "humidity": 56.0,
+    "wind": 4.0,
+    "windDir": "SE",
+    "updated": "2026-08-08T17:51:00+02:00",
     "stale": false,
     "ok": true
   },
@@ -19,7 +19,7 @@
     "humidity": 50.0,
     "wind": 1.6,
     "windDir": null,
-    "updated": "2026-08-08T17:18:21.039880+02:00",
+    "updated": "2026-08-08T17:52:41.393703+02:00",
     "stale": false,
     "ok": true
   }
