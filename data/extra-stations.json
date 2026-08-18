@@ -18,8 +18,8 @@
     "temp": 16.2,
     "humidity": 67.0,
     "wind": 1.7,
-    "windDir": "ENE",
-    "updated": "2026-08-18T22:11:13.496293+02:00",
+    "windDir": null,
+    "updated": "2026-08-18T22:37:56.310962+02:00",
     "stale": false,
     "ok": true
   }
