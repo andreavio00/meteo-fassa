@@ -16,10 +16,10 @@
     "quota": "1520 m",
     "source_url": "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
     "temp": 22.4,
-    "humidity": 58.0,
+    "humidity": 57.0,
     "wind": 1.9,
     "windDir": null,
-    "updated": "2026-08-19T16:06:23.223953+02:00",
+    "updated": "2026-08-19T16:50:10.919470+02:00",
     "stale": false,
     "ok": true
   }
