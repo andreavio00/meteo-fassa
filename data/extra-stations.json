@@ -4,10 +4,10 @@
     "quota": "1400 m",
     "source_url": "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
     "temp": 12.8,
-    "humidity": 96.0,
-    "wind": 1.3,
-    "windDir": "NE",
-    "updated": "2026-08-20T22:42:00+02:00",
+    "humidity": 97.0,
+    "wind": 0.4,
+    "windDir": "W",
+    "updated": "2026-08-20T23:02:00+02:00",
     "stale": false,
     "ok": true
   },
@@ -18,8 +18,8 @@
     "temp": 12.2,
     "humidity": 96.0,
     "wind": 1.1,
-    "windDir": "SSE",
-    "updated": "2026-08-20T22:43:25.220108+02:00",
+    "windDir": "NNE",
+    "updated": "2026-08-20T23:03:40.660047+02:00",
     "stale": false,
     "ok": true
   }
