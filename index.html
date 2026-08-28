@@ -1,40 +1,45 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1">
-
-<title>Meteo Val di Fassa</title>
-
-<link rel="stylesheet"
-      href="style.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1565c0">
+  <title>Meteo Val di Fassa</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  <main class="page">
+    <header class="page-header">
+      <h1>🏔️ Meteo Val di Fassa</h1>
+      <p class="subtitle">Condizioni attuali nella valle</p>
+      <div id="worker-status" class="worker-status">Aggiornamento dati…</div>
+    </header>
 
-<h1>🏔️ Meteo Val di Fassa</h1>
+    <section aria-labelledby="situation-title">
+      <h2 id="situation-title">🌡️ Situazione in Val di Fassa</h2>
+      <p class="section-intro">Le tre stazioni più utili per descrivere le condizioni locali.</p>
+      <div id="main-stations" class="main-grid"></div>
+    </section>
 
-<div id="stations">
-</div>
+    <section class="trip-section" aria-labelledby="trip-title">
+      <details id="trentino-details">
+        <summary>
+          <span>
+            <strong id="trip-title">🌦️ Meteo per una gita</strong>
+            <small>Meteo Trentino — altre stazioni</small>
+          </span>
+          <span class="summary-arrow">▼</span>
+        </summary>
+        <div class="trip-content">
+          <p class="section-intro">
+            Stazioni utili per confrontare le condizioni salendo di quota o spostandosi nella valle.
+          </p>
+          <div id="trentino-stations" class="secondary-grid"></div>
+        </div>
+      </details>
+    </section>
+  </main>
 
-<div id="detail-modal" class="modal hidden">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeDetailModal()">✕</button>
-    <div class="modal-frame-wrap">
-      <iframe id="detail-iframe" title="Dati sorgente"></iframe>
-    </div>
-    <a id="modal-open-link" class="modal-open-link" href="#" target="_blank" rel="noopener">
-      Apri il sito completo ↗
-    </a>
-  </div>
-</div>
-
-<script src="app.js"></script>
-
+  <script src="app.js"></script>
 </body>
-
 </html>
