@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Previsioni Meteo Venezia — LagunaLive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="previsioni.css">
+</head>
+<body>
+
+<!-- FASCIA 1 — Titolo, luogo, situazione attuale -->
+<header class="prvs-fascia prvs-fascia-header">
+    <button id="prvs-btn-impostazioni" class="prvs-btn-impostazioni" title="Impostazioni">⚙️</button>
+    <h1>Previsioni Meteo</h1>
+    <div class="prvs-luogo">Venezia — Centro Storico</div>
+    <div id="prvs-attuale" class="prvs-attuale">
+        <span id="prvs-attuale-osservato" class="prvs-attuale-caricamento">Caricamento situazione attuale…</span>
+    </div>
+    <nav class="prvs-nav">
+        <a href="index.html" class="prvs-nav-link">🌊 Dati live</a>
+    </nav>
+</header>
+
+<main>
+
+    <!-- FASCIA 2 — Scroll orario di oggi -->
+    <section class="prvs-fascia" id="prvs-fascia-oggi">
+        <div class="prvs-label" id="prvs-label-striscia">Prossime ore</div>
+        <div class="prvs-oraria-scroll" id="prvs-oggi-scroll">
+            <span class="prvs-caricamento">Caricamento previsioni…</span>
+        </div>
+    </section>
+
+    <!-- FASCIA 3 — 7 righe: oggi + 6 giorni successivi, ciascuna con accordion inline -->
+    <div class="prvs-label">Prossimi giorni</div>
+    <section class="prvs-fascia" id="prvs-fascia-giorni">
+        <!-- Una .prvs-giorno-item per ogni giorno, generata da JS -->
+    </section>
+
+    <!-- FASCIA 3bis — Marea: prossimi picchi come idrometro -->
+    <div class="prvs-label">Marea</div>
+    <section class="prvs-fascia" id="prvs-fascia-marea">
+        <!-- Righe marea con barra a idrometro, generate da JS -->
+    </section>
+
+    <!-- FASCIA 4 — Link esterni -->
+    <section class="prvs-fascia prvs-fascia-azioni">
+        <div class="prvs-link-esterni">
+            <a href="https://meteo.arpa.veneto.it/?page=mtg11"
+               target="_blank" rel="noopener" class="prvs-link-esterno">
+                ARPAV — Meteo Venezia Laguna
+            </a>
+            <a href="https://www.comune.venezia.it/it/content/centro-previsioni-e-segnalazioni-maree"
+               target="_blank" rel="noopener" class="prvs-link-esterno">
+                Comune di Venezia — Previsioni marea
+            </a>
+        </div>
+    </section>
+
+</main>
+
+<!-- MODAL IMPOSTAZIONI -->
+<div id="prvs-modal-impostazioni" class="prvs-modal-backdrop">
+    <div class="prvs-modal">
+        <div class="prvs-modal-header">
+            <h3>Impostazioni</h3>
+            <span id="prvs-impostazioni-close" class="prvs-modal-close">&times;</span>
+        </div>
+        <div id="prvs-impostazioni-body">
+            <div class="prvs-impostazioni-sezione">
+                <div class="prvs-impostazioni-titolo">Modello principale</div>
+                <div class="prvs-impostazioni-nota">Usato nelle schermate iniziali quando non stai confrontando i modelli.</div>
+                <div id="prvs-scelta-modello"></div>
+            </div>
+            <div class="prvs-impostazioni-sezione">
+                <div class="prvs-impostazioni-titolo">Campi nel dettaglio orario</div>
+                <div class="prvs-impostazioni-nota">Fino a 4 in aggiunta a meteo, temperatura e pioggia (sempre visibili).</div>
+                <div id="prvs-scelta-campi"></div>
+            </div>
+            <button id="prvs-btn-salva-impostazioni" class="prvs-btn" style="width:100%;margin:0.8rem 0 0 0;">Salva</button>
+        </div>
+    </div>
+</div>
+
+<!-- Dato osservato in tempo reale (stesse fonti di LagunaLive/index.html):
+     va caricato prima di previsioni-render.js, che lo usa in renderAttuale(). -->
+<script src="osservazioni.js"></script>
+<script src="previsioni-data.js"></script>
+<script src="previsioni-render.js"></script>
+
+</body>
+</html>
