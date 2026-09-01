@@ -1,53 +1,56 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1565c0">
-  <title>Meteo Val di Fassa</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#4a6670">
+<title>Meteo Val di Fassa</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="page">
-    <header class="page-header">
-      <h1>🏔️ Meteo Val di Fassa</h1>
-      <div id="worker-status" class="worker-status">Aggiornamento dati…</div>
-    </header>
+<main class="page">
+<header class="page-header">
+<div class="eyebrow">🏔️ Val di Fassa</div>
+<h1><span class="title-icon">🏔️</span>Pozza live</h1>
+<div id="worker-status" class="worker-status">Aggiornamento dati…</div>
+</header>
 
-    <section aria-label="Dati meteo principali">
-      <div id="main-stations" class="main-grid"></div>
-    </section>
+<section aria-label="Stazione di riferimento">
+<div id="hero-station"></div>
+</section>
 
-    <section class="forecast-placeholder" aria-label="Previsioni per la settimana">
-      <div class="placeholder-card">
-        <div class="placeholder-icon">📅</div>
-        <div>
-          <strong>Previsioni per la settimana</strong>
-          <small>Funzione non ancora attiva</small>
-        </div>
-        <span class="coming-soon">Prossimamente</span>
-      </div>
-    </section>
+<section aria-label="Stazioni di confronto">
+<div id="compact-stations" class="compact-grid"></div>
+</section>
 
-    <section class="trip-section" aria-labelledby="trip-title">
-      <details id="trentino-details">
-        <summary>
-          <span>
-            <strong id="trip-title">🌦️ Meteo per una gita</strong>
-            <small>Meteo Trentino — altre stazioni</small>
-          </span>
-          <span class="summary-arrow">▼</span>
-        </summary>
-        <div class="trip-content">
-          <p class="section-intro">
-            Stazioni utili per confrontare le condizioni salendo di quota o spostandosi nella valle.
-          </p>
-          <div id="trentino-stations" class="secondary-grid"></div>
-        </div>
-      </details>
-    </section>
-  </main>
+<section class="forecast-section">
+<div class="forecast-card">
+<div class="forecast-top">
+<span class="forecast-icon">⏱️</span>
+<div class="forecast-heading">
+<strong>Previsioni</strong>
+<small>Prossime ore e fascia della giornata</small>
+</div>
+<span class="coming-soon">Coming soon</span>
+</div>
+<div class="forecast-link-row">
+<span class="forecast-link disabled">📅 Previsioni della settimana ↗ <em>in arrivo</em></span>
+</div>
+</div>
+</section>
 
-  <script src="app.js"></script>
+<section class="trip-section">
+<details id="trentino-details">
+<summary>
+<span><strong>🌦️ Meteo per una gita</strong><small>Stazioni di riferimento — in preparazione</small></span>
+<span class="summary-arrow">▼</span>
+</summary>
+<div class="trip-content">
+<p>Questa sezione verrà completata scegliendo le stazioni più utili per valutare le condizioni salendo di quota (dati Meteo Trentino già disponibili in <code>data/extra-stations.json</code>).</p>
+</div>
+</details>
+</section>
+</main>
+<script src="app.js"></script>
 </body>
 </html>

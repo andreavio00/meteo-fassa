@@ -1,353 +1,256 @@
-const WORKER_URL = "https://meteofassa-proxy.andrea-vio.workers.dev/";
-const WORKER_TIMEOUT = 7000;
+const WORKER_URL="https://meteofassa-proxy.andrea-vio.workers.dev/";
+const WORKER_TIMEOUT=7000;
+const DATA_AGE_WARNING=30;
+const DATA_AGE_OLD=60;
 
-// Età del dato: oltre 15 min = attenzione, oltre 30 min = vecchio.
-const DATA_AGE_WARNING = 15;
-const DATA_AGE_OLD = 30;
-
-const TRENTINO_STATIONS = [
-  { code: "T0096", name: "Moena (Diga Pezzè)" },
-  { code: "T0437", name: "Canazei (Gries)" },
-  { code: "T0094", name: "Passo Costalunga" },
-  { code: "T0229", name: "Campitello (Malga Do Col D'Aura)" },
-  { code: "T0092", name: "Pian Fedaia (Diga)" },
-  { code: "T0403", name: "Canazei (Ciampac)" }
-];
-
-const MAIN_STATIONS = {
-  vigo: {
-    name: "Vigo",
-    fullName: "Vigo di Fassa",
-    quota: "1400 m",
-    icon: "🌲",
-    sourceUrl: "https://stazioni.meteoproject.it/dati/vigodifassa/tabella-vuota.php"
-  },
-  monzon: {
-    name: "Monzon",
-    fullName: "Monzon – Pozza di Fassa",
-    quota: "1520 m",
-    icon: "🌲",
-    sourceUrl: "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon"
-  },
-  moena: {
-    name: "Moena",
-    fullName: "Moena",
-    quota: "1221 m",
-    icon: "🌲"
-  }
+const MAIN_STATIONS={
+ vigo:{name:"Vigo",fullName:"Vigo di Fassa",quota:"1382 m",icon:"🌲",sourceLabel:"Vigo Meteo",sourceUrl:"https://stazioni.meteoproject.it/dati/vigodifassa/dati.php"},
+ monzon:{name:"Monzon",fullName:"Monzon – Pozza di Fassa",quota:"1520 m",icon:"⛰️",sourceLabel:"MeteoNetwork",sourceUrl:"https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon"},
+ moena:{name:"Moena",fullName:"Moena",quota:"1221 m",icon:"🌲",sourceLabel:"Moena Meteo",sourceUrl:"https://www.moenameteo.it/"}
 };
 
-function fetchWithTimeout(url, ms) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  return fetch(url, { signal: controller.signal })
-    .finally(() => clearTimeout(timer));
+// Scala di comfort percepito. Il range di riferimento -10..35°C copre il clima
+// tipico della valle (inverno rigido / estate mite in quota).
+const COMFORT_MIN=-10, COMFORT_MAX=35;
+
+function fetchWithTimeout(url,ms){
+ const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
+ return fetch(url,{signal:c.signal}).finally(()=>clearTimeout(t));
+}
+function num(v,d=1){
+ if(v===null||v===undefined||v===""||!Number.isFinite(Number(v)))return "—";
+ return Number(v).toFixed(d).replace(".",",");
+}
+function dateOf(v){if(!v)return null;const d=new Date(v);return Number.isNaN(d.getTime())?null:d;}
+function time(v){
+ const d=dateOf(v); if(!d)return "—";
+ return new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",hour:"2-digit",minute:"2-digit"}).format(d);
+}
+// Il ritardo si mostra solo se è cospicuo (>30 min); si colora di rosso
+// solo se supera l'ora. Sotto i 30 min mostriamo solo l'orario, senza
+// etichetta, per non appesantire la card con un dato quasi sempre uguale.
+function age(v){
+ const d=dateOf(v);
+ if(!d)return {c:"unknown",label:"Ora del dato non disponibile",showDelay:false};
+ const m=Math.max(0,(Date.now()-d.getTime())/60000);
+ if(m>DATA_AGE_OLD)return {c:"old",label:`ritardo di ${Math.floor(m)} min`,showDelay:true};
+ if(m>DATA_AGE_WARNING)return {c:"warning",label:`${Math.floor(m)} min fa`,showDelay:true};
+ return {c:"fresh",label:"",showDelay:false};
+}
+function dir(v){
+ if(v===null||v===undefined||v==="")return "—";
+ if(typeof v==="string"&&Number.isNaN(Number(v)))return v;
+ const ds=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+ return ds[Math.round(Number(v)/22.5)%16];
+}
+// NOTA: nessuna delle 3 stazioni fornisce oggi un proprio orario di
+// rilevazione (il campo "aggiornamento" è sempre null/assente nella risposta
+// del Worker). Non è quindi un problema di mapping: il dato semplicemente
+// non c'è ancora. Finché non viene aggiunto lato Worker, mostriamo onestamente
+// "non disponibile" invece di usare l'orario di fetch della pagina.
+function timestamp(data){
+ if(!data)return null;
+ for(const v of [data.aggiornamento,data.datetime,data.timestamp,data.data_ora,data.dataOra,data.time,data.ora])
+   if(dateOf(v))return v;
+ return null;
+}
+function normalise(raw){
+ return {workerTimestamp:raw.timestamp||raw.datetime||null,vigo:raw.vigo||null,monzon:raw.monzon||raw.pozza||null,moena:raw.moena||null};
+}
+function numOrNull(v){
+ if(v===null||v===undefined||v===""||!Number.isFinite(Number(v)))return null;
+ return Number(v);
+}
+// Vigo e Moena espongono già un heat_index/wind_chill calcolato dalla
+// centralina: lo usiamo direttamente perché più affidabile del nostro calcolo.
+// Monzon non li fornisce: per lei si ricade sul calcolo di feltTemperature().
+function stationFelt(data){
+ const hi=numOrNull(data.heat_index?.attuale??data.heat_index);
+ if(hi!==null)return hi;
+ const wc=numOrNull(data.wind_chill?.attuale??data.wind_chill);
+ if(wc!==null)return wc;
+ return null;
+}
+function cardData(key,data){
+ const cfg=MAIN_STATIONS[key];
+ if(!data)return {...cfg,error:"Dati non disponibili"};
+ const w=data.vento&&typeof data.vento==="object"?data.vento:{};
+ const r=data.precipitazioni&&typeof data.precipitazioni==="object"?data.precipitazioni:{};
+ const temp=data.temperatura?.attuale??data.temperatura??null;
+ const humidity=data.umidita?.attuale??data.umidita??null;
+ const wind=w.attuale??(typeof data.vento==="number"?data.vento:null);
+ return {...cfg,
+   quota:data.quota?`${data.quota} m`:cfg.quota,
+   temp,humidity,
+   pressure:data.pressione?.attuale??data.pressione??null,
+   wind,
+   gust:w.raffica??data.vento_max_giorno??data.raffica??null,
+   windDir:w.direzione??data.direzione??null,
+   // "intensita"/"pioggia_rate" sono la pioggia istantanea (mm/h), non un
+   // totale accumulato nell'ultima ora — è il dato più vicino disponibile.
+   rainRate:r.intensita??data.pioggia_rate??null,
+   rainDaily:r.giornaliero??data.pioggia??null,
+   felt:stationFelt(data)??feltTemperature(temp,humidity,wind),
+   updated:timestamp(data)
+ };
 }
 
-function numberOrDash(value, decimals = 1) {
-  if (value === null || value === undefined || value === "" || !Number.isFinite(Number(value))) {
-    return "—";
-  }
-  return Number(value).toFixed(decimals).replace(".", ",");
+// Temperatura percepita — formula di Steadman (Apparent Temperature, versione
+// "in ombra", senza termine di radiazione solare): stessa famiglia di formula
+// già usata per l'Heat Index di LagunaLive, adattata qui senza dato di
+// irraggiamento (non disponibile dalle stazioni Val di Fassa).
+function feltTemperature(tempC,rhPercent,windKmh){
+ if(![tempC,rhPercent,windKmh].every(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))))return null;
+ const t=Number(tempC),rh=Number(rhPercent),ws=Number(windKmh)/3.6;
+ const e=(rh/100)*6.105*Math.exp((17.27*t)/(237.7+t));
+ return t+0.33*e-0.70*ws-4.00;
 }
 
-function parseDate(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+// --- Scala colore unica blu (freddo) -> rosso (caldo) -------------------
+// Usata sia dal grafico verticale (temperatura reale) sia dalla barra di
+// qualità orizzontale (temperatura percepita), cosi restano coerenti.
+function scalePercent(value){
+ if(value===null||value===undefined||!Number.isFinite(Number(value)))return null;
+ return Math.max(0,Math.min(100,((Number(value)-COMFORT_MIN)/(COMFORT_MAX-COMFORT_MIN))*100));
+}
+function hexToRgb(h){const n=parseInt(h.slice(1),16);return [n>>16&255,n>>8&255,n&255];}
+function mix(c1,c2,t){return c1.map((v,i)=>Math.round(v+(c2[i]-v)*t));}
+function gradientColorAt(percent){
+ if(percent===null)return "var(--unknown)";
+ const cold=hexToRgb("#4f83c9"),mid=hexToRgb("#5aa66a"),hot=hexToRgb("#cf5a44");
+ const rgb=percent<=50?mix(cold,mid,percent/50):mix(mid,hot,(percent-50)/50);
+ return `rgb(${rgb.join(",")})`;
+}
+function comfortLabel(value){
+ const t=Number(value);
+ if(value===null||value===undefined||!Number.isFinite(t))return "—";
+ if(t<5)return "Freddo";
+ if(t<13)return "Fresco";
+ if(t<22)return "Confortevole";
+ if(t<27)return "Caldo";
+ return "Molto caldo";
 }
 
-function formatTime(value) {
-  const date = parseDate(value);
-  if (!date) return "—";
-  return new Intl.DateTimeFormat("it-IT", {
-    timeZone: "Europe/Rome",
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(date);
+// Il grafico verticale è stato rimosso (con la barra qualità orizzontale
+// formava una specie di croce). Restano solo il colonnino di spazio
+// bianco, così i dati a destra restano perfettamente allineati.
+function heroSpacer(){
+ return `<div class="thermo-graph"></div>`;
 }
 
-function dataAgeInfo(value) {
-  const date = parseDate(value);
-  if (!date) {
-    return {
-      className: "unknown",
-      label: "Ora dato non disponibile",
-      minutes: null
-    };
-  }
-
-  const minutes = Math.max(0, (Date.now() - date.getTime()) / 60000);
-
-  if (minutes > DATA_AGE_OLD) {
-    return {
-      className: "old",
-      label: `Dato vecchio · ${Math.floor(minutes)} min fa`,
-      minutes
-    };
-  }
-
-  if (minutes > DATA_AGE_WARNING) {
-    return {
-      className: "warning",
-      label: `Dato non recente · ${Math.floor(minutes)} min fa`,
-      minutes
-    };
-  }
-
-  return {
-    className: "fresh",
-    label: minutes < 1 ? "Dato appena rilevato" : `Dato di ${Math.floor(minutes)} min fa`,
-    minutes
-  };
+// --- Barra di qualità orizzontale: temperatura percepita ------------------
+function qualityBar(felt){
+ const p=scalePercent(felt);
+ const color=gradientColorAt(p);
+ const label=felt===null?"—":comfortLabel(felt);
+ const markerStyle=p===null?"display:none":`left:${p}%;border-color:${color}`;
+ return `<div class="quality-row">
+  <div class="quality-track"><div class="quality-marker" style="${markerStyle}"></div></div>
+  <span class="quality-label" style="color:${color}">${label}</span>
+ </div>`;
 }
 
-function direction(deg) {
-  if (deg === null || deg === undefined || deg === "" || !Number.isFinite(Number(deg))) {
-    return "—";
-  }
-  const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE",
-                "S","SSW","SW","WSW","W","WNW","NW","NNW"];
-  return dirs[Math.round(Number(deg) / 22.5) % 16];
+function feltRow(felt){
+ return `<div class="percepita-block">
+  <div class="percepita-label">Percepita <strong>${felt===null?"—":num(felt,0)+"°"}</strong></div>
+  ${qualityBar(felt)}
+ </div>`;
 }
 
-// Cerca l'ora specifica del dato, dando priorità ai campi della singola stazione.
-// Il timestamp del Worker viene usato solo come fallback.
-function getStationTimestamp(data, workerTimestamp) {
-  if (!data) return workerTimestamp || null;
-
-  const candidates = [
-    data.aggiornamento,
-    data.datetime,
-    data.timestamp,
-    data.data_ora,
-    data.dataOra,
-    data.time,
-    data.ora
-  ];
-
-  for (const value of candidates) {
-    if (parseDate(value)) return value;
-  }
-
-  return workerTimestamp || null;
+// Compare solo se c'è davvero un avviso attivo (arriveranno con le
+// previsioni). Per ora non c'è nessuna logica di avvisi: non mostriamo
+// nessuno slot vuoto/placeholder.
+function alertsSlot(alerts){
+ if(!alerts||!alerts.length)return "";
+ return `<div class="alerts-slot">⚠️ ${alerts.join(" · ")}</div>`;
 }
 
-function normaliseWorkerData(raw) {
-  return {
-    workerTimestamp: raw.timestamp || raw.datetime || null,
-    vigo: raw.vigo || null,
-    monzon: raw.monzon || raw.pozza || null,
-    moena: raw.moena || null
-  };
+function metric(icon,label,value){
+ return `<div class="metric"><span class="metric-icon">${icon}</span><span class="metric-text"><small>${label}</small><strong>${value}</strong></span></div>`;
 }
 
-function mainDataToCard(key, data, workerTimestamp) {
-  const cfg = MAIN_STATIONS[key];
-
-  if (!data) {
-    return {
-      name: cfg.name,
-      fullName: cfg.fullName,
-      quota: cfg.quota,
-      icon: cfg.icon,
-      error: "Dati non disponibili"
-    };
-  }
-
-  const wind = data.vento && typeof data.vento === "object" ? data.vento : {};
-  const rain = data.precipitazioni && typeof data.precipitazioni === "object"
-    ? data.precipitazioni : {};
-
-  const pressure = data.pressione?.attuale ?? data.pressione ?? null;
-  const humidity = data.umidita?.attuale ?? data.umidita ?? null;
-  const temp = data.temperatura?.attuale ?? data.temperatura ?? null;
-  const windValue = wind.attuale ?? (typeof data.vento === "number" ? data.vento : null);
-  const gust = wind.raffica ?? data.vento_max_giorno ?? data.raffica ?? null;
-  const windDir = wind.direzione ?? data.direzione ?? null;
-  const rainValue = rain.giornaliero ?? data.pioggia ?? null;
-  const updated = getStationTimestamp(data, workerTimestamp);
-
-  return {
-    name: cfg.name,
-    fullName: cfg.fullName,
-    quota: data.quota ? `${data.quota} m` : cfg.quota,
-    icon: cfg.icon,
-    temp,
-    humidity,
-    pressure,
-    wind: windValue,
-    gust,
-    windDir,
-    rain: rainValue,
-    updated,
-    sourceUrl: cfg.sourceUrl
-  };
+function sourceLink(c){
+ return `<a class="source-button" href="${c.sourceUrl}" target="_blank" rel="noopener">🌐 ${c.sourceLabel} ↗</a>`;
 }
 
-function createMainCard(card) {
-  if (card.error) {
-    return `
-      <article class="station-card station-error">
-        <div class="card-title"><span>${card.icon}</span><strong>${card.name}</strong></div>
-        <div class="quota">${card.quota}</div>
-        <p>${card.error}</p>
-      </article>
-    `;
-  }
-
-  const windDir = card.windDir && typeof card.windDir === "string"
-    ? card.windDir
-    : (card.windDir !== null && card.windDir !== undefined ? direction(card.windDir) : "—");
-
-  const age = dataAgeInfo(card.updated);
-
-  const source = card.sourceUrl
-    ? `<a class="source-link" href="${card.sourceUrl}" target="_blank" rel="noopener">Fonte ↗</a>`
-    : "";
-
-  return `
-    <article class="station-card main-card">
-      <div class="card-head">
-        <div>
-          <div class="card-title"><span>${card.icon}</span><strong>${card.name}</strong></div>
-          <div class="quota">${card.quota}</div>
-        </div>
-        ${source}
-      </div>
-
-      <div class="temperature">${numberOrDash(card.temp)}<span>°C</span></div>
-
-      <div class="metrics">
-        <div class="metric"><span>💧 Umidità</span><strong>${numberOrDash(card.humidity, 0)}%</strong></div>
-        <div class="metric"><span>💨 Vento</span><strong>${numberOrDash(card.wind)} km/h ${windDir}</strong></div>
-        <div class="metric"><span>🌬️ Raffica</span><strong>${numberOrDash(card.gust)} km/h</strong></div>
-        <div class="metric"><span>⏲️ Pressione</span><strong>${numberOrDash(card.pressure)} hPa</strong></div>
-        <div class="metric"><span>🌧️ Pioggia</span><strong>${numberOrDash(card.rain)} mm</strong></div>
-      </div>
-
-      <div class="data-time ${age.className}" title="${age.label}">
-        <span class="age-dot"></span>
-        <span>Dati delle <strong>${formatTime(card.updated)}</strong></span>
-      </div>
-      <div class="data-age ${age.className}">${age.label}</div>
-    </article>
-  `;
+function errorCard(c,hero){
+ return `<article class="station-card ${hero?"hero-card":"compact-card"} station-error">
+  <div class="card-title">${c.icon} <strong>${hero?c.fullName:c.name}</strong></div>
+  <div class="quota">${c.quota}</div>
+  <p class="error-text">${c.error}</p>
+  ${sourceLink(c)}
+ </article>`;
 }
 
-async function loadMainStations() {
-  const container = document.getElementById("main-stations");
-  const status = document.getElementById("worker-status");
-
-  try {
-    const response = await fetchWithTimeout(`${WORKER_URL}?_=${Date.now()}`, WORKER_TIMEOUT);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-    const raw = await response.json();
-    if (!raw.ok) throw new Error("Worker non disponibile");
-
-    const data = normaliseWorkerData(raw);
-
-    container.innerHTML = ["vigo", "monzon", "moena"]
-      .map(key => createMainCard(mainDataToCard(key, data[key], data.workerTimestamp)))
-      .join("");
-
-    status.textContent = `Fonte dati aggiornata alle ${formatTime(data.workerTimestamp)}`;
-    status.className = "worker-status ok";
-  } catch (error) {
-    console.error("Worker:", error);
-    container.innerHTML = ["vigo", "monzon", "moena"]
-      .map(key => createMainCard({
-        name: MAIN_STATIONS[key].name,
-        fullName: MAIN_STATIONS[key].fullName,
-        quota: MAIN_STATIONS[key].quota,
-        icon: MAIN_STATIONS[key].icon,
-        error: "Impossibile leggere i dati in questo momento"
-      }))
-      .join("");
-
-    status.textContent = "⚠️ Dati principali non disponibili";
-    status.className = "worker-status error";
-  }
+function makeHeroCard(c){
+ if(c.error)return errorCard(c,true);
+ const a=age(c.updated);
+ const wd=c.windDir!==null&&c.windDir!==undefined?dir(c.windDir):"—";
+ return `<article class="station-card hero-card">
+  <div class="hero-top">
+   <span class="card-icon">${c.icon}</span>
+   <div><div class="station-name">${c.fullName}</div><div class="quota">${c.quota}</div></div>
+  </div>
+  <div class="hero-columns">
+   ${heroSpacer()}
+   <div class="hero-values">
+    <div class="temp-humidity-row">
+     <span class="value-num">${num(c.temp)}°</span>
+     <span class="value-num value-humidity">💧${num(c.humidity,0)}%</span>
+    </div>
+    ${feltRow(c.felt)}
+    <div class="metrics">
+     ${metric("💨","Vento",`${num(c.wind)} km/h ${wd}`)}
+     ${metric("🌬️","Raffica",`${num(c.gust)} km/h`)}
+     ${metric("⏲️","Pressione",`${num(c.pressure)} hPa`)}
+     ${metric("🌧️","Pioggia",`${num(c.rainRate)} mm/h · ${num(c.rainDaily)} mm oggi`)}
+    </div>
+   </div>
+  </div>
+  ${alertsSlot(c.alerts)}
+  <div class="data-time ${a.c}"><span class="age-dot"></span>Rilevato alle <strong>${time(c.updated)}</strong>${a.showDelay?` · ${a.label}`:""}</div>
+  ${sourceLink(c)}
+ </article>`;
 }
 
-async function loadTrentinoStation(station) {
-  const url =
-    `https://dati.meteotrentino.it/service.asmx/datiRealtimeUnaStazione?stazione=${station.code}&h=1`;
-
-  const response = await fetchWithTimeout(url, 7000);
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-  const data = await response.json();
-  const features = data.features || [];
-  if (!features.length) throw new Error("Nessun dato");
-
-  const latest = features[0].properties || {};
-
-  function latestValue(field) {
-    for (const feature of features) {
-      const value = feature.properties?.[field];
-      if (value !== "" && value !== null && value !== undefined) return value;
-    }
-    return null;
-  }
-
-  return {
-    name: station.name,
-    quota: latest.quota,
-    temp: latestValue("ta(°C)"),
-    humidity: latestValue("umid(%)"),
-    wind: latestValue("vvmed(m/s)"),
-    windDir: latestValue("dvmed(gN)"),
-    updated: latest.datetime
-  };
+function makeCompactCard(c){
+ if(c.error)return errorCard(c,false);
+ const a=age(c.updated);
+ const wd=c.windDir!==null&&c.windDir!==undefined?dir(c.windDir):"—";
+ return `<article class="station-card compact-card">
+  <div class="card-title">${c.icon} <strong>${c.name}</strong></div>
+  <div class="quota">${c.quota}</div>
+  <div class="temp-humidity-row compact-thr">
+   <span class="value-num compact-value">${num(c.temp)}°</span>
+   <span class="value-num value-humidity compact-value">💧${num(c.humidity,0)}%</span>
+  </div>
+  ${feltRow(c.felt)}
+  <div class="metrics metrics-compact">
+   ${metric("💨","Vento",`${num(c.wind)} km/h ${wd}`)}
+   ${metric("🌬️","Raffica",`${num(c.gust)} km/h`)}
+   ${metric("🌧️","Pioggia",`${num(c.rainRate)} mm/h · ${num(c.rainDaily)} mm oggi`)}
+  </div>
+  <div class="data-time ${a.c}"><span class="age-dot"></span>${time(c.updated)}${a.showDelay?` · ${a.label}`:""}</div>
+  ${sourceLink(c)}
+ </article>`;
 }
 
-function createTrentinoCard(data) {
-  return `
-    <article class="station-card secondary-card">
-      <div class="card-title"><span>⛰️</span><strong>${data.name}</strong></div>
-      <div class="quota">${data.quota ? data.quota + " m" : ""}</div>
-      <div class="secondary-temp">${numberOrDash(data.temp)}<span>°C</span></div>
-      <div class="secondary-line">💧 ${numberOrDash(data.humidity, 0)}% · 💨 ${numberOrDash(data.wind)} m/s ${direction(data.windDir)}</div>
-      <div class="updated">🕒 ${data.updated || "—"}</div>
-    </article>
-  `;
+async function load(){
+ const hero=document.getElementById("hero-station"),box=document.getElementById("compact-stations"),status=document.getElementById("worker-status");
+ try{
+  const res=await fetchWithTimeout(`${WORKER_URL}?_=${Date.now()}`,WORKER_TIMEOUT);
+  if(!res.ok)throw Error(`HTTP ${res.status}`);
+  const raw=await res.json(); if(!raw.ok)throw Error("Worker non disponibile");
+  const d=normalise(raw);
+  hero.innerHTML=makeHeroCard(cardData("vigo",d.vigo));
+  box.innerHTML=["monzon","moena"].map(k=>makeCompactCard(cardData(k,d[k]))).join("");
+  status.textContent=`Pagina aggiornata alle ${time(d.workerTimestamp)}`;
+  status.className="worker-status ok";
+ }catch(e){
+  console.error(e);
+  hero.innerHTML=makeHeroCard({...MAIN_STATIONS.vigo,error:"Impossibile leggere i dati in questo momento"});
+  box.innerHTML=["monzon","moena"].map(k=>makeCompactCard({...MAIN_STATIONS[k],error:"Impossibile leggere i dati in questo momento"})).join("");
+  status.textContent="⚠️ Dati principali non disponibili"; status.className="worker-status error";
+ }
 }
-
-async function loadTrentinoStations() {
-  const container = document.getElementById("trentino-stations");
-  container.innerHTML = '<p class="loading">Caricamento stazioni Meteo Trentino…</p>';
-
-  const results = await Promise.allSettled(
-    TRENTINO_STATIONS.map(station => loadTrentinoStation(station))
-  );
-
-  container.innerHTML = results.map((result, index) => {
-    if (result.status === "fulfilled") return createTrentinoCard(result.value);
-
-    return `
-      <article class="station-card secondary-card station-error">
-        <div class="card-title"><span>⛰️</span><strong>${TRENTINO_STATIONS[index].name}</strong></div>
-        <p>Dati non disponibili</p>
-      </article>
-    `;
-  }).join("");
-}
-
-document.getElementById("trentino-details").addEventListener("toggle", event => {
-  if (event.target.open && !event.target.dataset.loaded) {
-    event.target.dataset.loaded = "true";
-    loadTrentinoStations();
-  }
-});
-
-loadMainStations();
-
-// Aggiorna solo l'indicazione dell'età dei dati senza richiedere nuovamente il Worker.
-setInterval(() => {
-  document.querySelectorAll(".data-time").forEach(el => {
-    // Il testo viene già fissato al caricamento; il refresh completo dei dati
-    // resta affidato al normale ricaricamento della pagina.
-  });
-}, 60000);
+load();
