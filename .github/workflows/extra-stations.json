@@ -1,0 +1,5 @@
+{
+  "vigo":{"name":"Vigo di Fassa","quota":"1382 m","source_url":"https://stazioni.meteoproject.it/dati/vigodifassa/dati.php","worker":"https://meteofassa-proxy.andrea-vio.workers.dev/","ok":true},
+  "pozza":{"name":"Monzon - Pozza di Fassa","quota":"1520 m","source_url":"https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon","worker":"https://meteofassa-proxy.andrea-vio.workers.dev/","ok":true},
+  "moena":{"name":"Moena","quota":"1221 m","source_url":"https://www.moenameteo.it/","worker":"https://meteofassa-proxy.andrea-vio.workers.dev/","ok":true}
+}
