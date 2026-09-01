@@ -1,26 +1,5 @@
 {
-  "vigo": {
-    "name": "Vigo di Fassa",
-    "quota": "1400 m",
-    "source_url": "https://www.dolomitimeteo.com/stazione-meteo-vigo/",
-    "temp": 16.9,
-    "humidity": 71.0,
-    "wind": 1.3,
-    "windDir": "SSW",
-    "updated": "2026-09-01T21:33:00+02:00",
-    "stale": false,
-    "ok": true
-  },
-  "pozza": {
-    "name": "Pozza di Fassa (Monzon)",
-    "quota": "1520 m",
-    "source_url": "https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon",
-    "temp": 16.1,
-    "humidity": 75.0,
-    "wind": 1.7,
-    "windDir": "S",
-    "updated": "2026-09-01T21:34:57.349661+02:00",
-    "stale": false,
-    "ok": true
-  }
+  "vigo":{"name":"Vigo di Fassa","quota":"1382 m","source_url":"https://stazioni.meteoproject.it/dati/vigodifassa/dati.php","worker":"https://meteofassa-proxy.andrea-vio.workers.dev/","ok":true},
+  "pozza":{"name":"Monzon - Pozza di Fassa","quota":"1520 m","source_url":"https://www.meteonetwork.eu/it/weather-station/trn314-stazione-meteorologica-di-monzon","worker":"https://meteofassa-proxy.andrea-vio.workers.dev/","ok":true},
+  "moena":{"name":"Moena","quota":"1221 m","source_url":"https://www.moenameteo.it/","worker":"https://meteofassa-proxy.andrea-vio.workers.dev/","ok":true}
 }
