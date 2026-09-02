@@ -99,12 +99,18 @@ function cardData(key,data){
    temp,humidity,
    pressure:data.pressione?.attuale??data.pressione??null,
    wind,
+   wind10:numOrNull(w.media10??w.media_10min??w.media??data.vento10??data.media10),
    gust:w.raffica??data.vento_max_giorno??data.raffica??null,
    windDir:w.direzione??data.direzione??null,
    // "intensita"/"pioggia_rate" sono la pioggia istantanea (mm/h), non un
    // totale accumulato nell'ultima ora — è il dato più vicino disponibile.
    rainRate:r.intensita??data.pioggia_rate??null,
    rainDaily:r.giornaliero??data.pioggia??null,
+   // Indici della centralina esposti singolarmente (non solo fusi in "felt"),
+   // così nella modale si vede il dato grezzo oltre alla sintesi colorata.
+   dewPoint:numOrNull(data.punto_rugiada?.attuale??data.punto_rugiada??data.dew_point?.attuale??data.dew_point),
+   heatIndex:numOrNull(data.heat_index?.attuale??data.heat_index),
+   windChill:numOrNull(data.wind_chill?.attuale??data.wind_chill),
    felt:stationFelt(data)??feltTemperature(temp,humidity,wind),
    updated:timestamp(data)
  };
@@ -144,13 +150,6 @@ function comfortLabel(value){
  if(t<22)return "Confortevole";
  if(t<27)return "Caldo";
  return "Molto caldo";
-}
-
-// Il grafico verticale è stato rimosso (con la barra qualità orizzontale
-// formava una specie di croce). Restano solo il colonnino di spazio
-// bianco, così i dati a destra restano perfettamente allineati.
-function heroSpacer(){
- return `<div class="thermo-graph"></div>`;
 }
 
 // --- Barra di qualità orizzontale: temperatura percepita ------------------
@@ -197,57 +196,86 @@ function errorCard(c,hero){
  </article>`;
 }
 
+// Card principale (Vigo): mostra solo temperatura, umidità e pioggia.
+// Tutti gli altri dati (percepita, vento, raffica, pressione) si trovano
+// nella modale, aperta toccando la scheda.
 function makeHeroCard(c){
  if(c.error)return errorCard(c,true);
  const a=age(c.updated);
- const wd=c.windDir!==null&&c.windDir!==undefined?dir(c.windDir):"—";
- return `<article class="station-card hero-card">
+ return `<article class="station-card hero-card" data-station-id="vigo" tabindex="0" role="button" aria-label="Dettagli ${c.fullName}">
   <div class="hero-top">
    <span class="card-icon">${c.icon}</span>
    <div><div class="station-name">${c.fullName}</div><div class="quota">${c.quota}</div></div>
   </div>
-  <div class="hero-columns">
-   ${heroSpacer()}
-   <div class="hero-values">
-    <div class="temp-humidity-row">
-     <span class="value-num">${num(c.temp)}°</span>
-     <span class="value-num value-humidity">💧${num(c.humidity,0)}%</span>
-    </div>
-    ${feltRow(c.felt)}
-    <div class="metrics">
-     ${metric("💨","Vento",`${num(c.wind)} km/h ${wd}`)}
-     ${metric("🌬️","Raffica",`${num(c.gust)} km/h`)}
-     ${metric("⏲️","Pressione",`${num(c.pressure)} hPa`)}
-     ${metric("🌧️","Pioggia",`${num(c.rainRate)} mm/h · ${num(c.rainDaily)} mm oggi`)}
-    </div>
+  <div class="hero-values">
+   <div class="temp-humidity-row hero-thr">
+    <span class="value-num hero-value">${num(c.temp)}°</span>
+    <span class="value-num value-humidity hero-value-humidity">💧${num(c.humidity,0)}%</span>
    </div>
+   <div class="rain-row">🌧️ ${num(c.rainRate)} mm/h · ${num(c.rainDaily)} mm oggi</div>
   </div>
   ${alertsSlot(c.alerts)}
   <div class="data-time ${a.c}"><span class="age-dot"></span>Rilevato alle <strong>${time(c.updated)}</strong>${a.showDelay?` · ${a.label}`:""}</div>
-  ${sourceLink(c)}
+  <div class="tap-hint">Tocca per tutti i dati ›</div>
  </article>`;
 }
 
-function makeCompactCard(c){
+// Card compatta (Monzon / Moena): stessa logica della hero, formato ridotto.
+// key serve solo per sapere quale voce di mainStationsCache aprire al click.
+function makeCompactCard(c,key){
  if(c.error)return errorCard(c,false);
  const a=age(c.updated);
- const wd=c.windDir!==null&&c.windDir!==undefined?dir(c.windDir):"—";
- return `<article class="station-card compact-card">
+ return `<article class="station-card compact-card" data-station-id="${key}" tabindex="0" role="button" aria-label="Dettagli ${c.name}">
   <div class="card-title">${c.icon} <strong>${c.name}</strong></div>
   <div class="quota">${c.quota}</div>
   <div class="temp-humidity-row compact-thr">
    <span class="value-num compact-value">${num(c.temp)}°</span>
    <span class="value-num value-humidity compact-value">💧${num(c.humidity,0)}%</span>
   </div>
-  ${feltRow(c.felt)}
-  <div class="metrics metrics-compact">
-   ${metric("💨","Vento",`${num(c.wind)} km/h ${wd}`)}
-   ${metric("🌬️","Raffica",`${num(c.gust)} km/h`)}
-   ${metric("🌧️","Pioggia",`${num(c.rainRate)} mm/h · ${num(c.rainDaily)} mm oggi`)}
-  </div>
+  <div class="rain-row rain-row-compact">🌧️ ${num(c.rainRate)} mm/h · ${num(c.rainDaily)} mm oggi</div>
   <div class="data-time ${a.c}"><span class="age-dot"></span>${time(c.updated)}${a.showDelay?` · ${a.label}`:""}</div>
-  ${sourceLink(c)}
+  <div class="tap-hint tap-hint-sm">Tocca per i dettagli ›</div>
  </article>`;
+}
+
+// Contenuto della modale con tutti i dati di una stazione principale
+// (percepita, vento, raffica, pressione, pioggia, link alla fonte).
+function mainStationModalHtml(c){
+ const a=age(c.updated);
+ const wd=c.windDir!==null&&c.windDir!==undefined?dir(c.windDir):"—";
+ return `<div class="hero-top">
+  <span class="card-icon">${c.icon}</span>
+  <div><div class="station-name">${c.fullName}</div><div class="quota">${c.quota}</div></div>
+ </div>
+ <div class="hero-values" style="margin-top:14px">
+  <div class="temp-humidity-row">
+   <span class="value-num">${num(c.temp)}°</span>
+   <span class="value-num value-humidity">💧${num(c.humidity,0)}%</span>
+  </div>
+  ${feltRow(c.felt)}
+  <div class="metrics">
+   ${metric("🌡️","Punto di rugiada",c.dewPoint===null?"—":`${num(c.dewPoint)}°`)}
+   ${metric("♨️","Heat Index",c.heatIndex===null?"—":`${num(c.heatIndex)}°`)}
+   ${metric("🥶","Wind chill",c.windChill===null?"—":`${num(c.windChill)}°`)}
+   ${metric("💨","Vento",`${num(c.wind)} km/h ${wd}`)}
+   ${metric("〰️","Vento medio",c.wind10===null?"—":`${num(c.wind10)} km/h`)}
+   ${metric("🌬️","Raffica",`${num(c.gust)} km/h`)}
+   ${metric("⏲️","Pressione",`${num(c.pressure)} hPa`)}
+   ${metric("🌧️","Pioggia",`${num(c.rainRate)} mm/h`)}
+   ${metric("☔","Pioggia oggi",`${num(c.rainDaily)} mm`)}
+  </div>
+ </div>
+ ${alertsSlot(c.alerts)}
+ <div class="data-time ${a.c}" style="margin-top:14px"><span class="age-dot"></span>Rilevato alle <strong>${time(c.updated)}</strong>${a.showDelay?` · ${a.label}`:""}</div>
+ ${sourceLink(c)}`;
+}
+
+let mainStationsCache=null;
+
+function openStationModal(key){
+ const c=mainStationsCache&&mainStationsCache[key];
+ if(!c||c.error)return;
+ openModal(mainStationModalHtml(c));
 }
 
 // --- Card compatte griglia gita --------------------------------------------
@@ -315,17 +343,21 @@ function tripModalHtml(s){
 
 let tripStationsCache=null;
 
+// --- Modale generica (usata sia dalle card principali sia dalla gita) -----
+function openModal(html){
+ document.getElementById("modal-body").innerHTML=html;
+ document.getElementById("modal-backdrop").hidden=false;
+ document.body.style.overflow="hidden";
+}
+function closeModal(){
+ document.getElementById("modal-backdrop").hidden=true;
+ document.body.style.overflow="";
+}
 function openTripModal(id){
  if(!tripStationsCache)return;
  const s=tripStationsCache.find(x=>x.id===id);
  if(!s)return;
- document.getElementById("trip-modal-body").innerHTML=tripModalHtml(s);
- document.getElementById("trip-modal-backdrop").hidden=false;
- document.body.style.overflow="hidden";
-}
-function closeTripModal(){
- document.getElementById("trip-modal-backdrop").hidden=true;
- document.body.style.overflow="";
+ openModal(tripModalHtml(s));
 }
 
 async function loadTripStations(){
@@ -353,18 +385,37 @@ async function loadTripStations(){
 function initTripSection(){
  const details=document.getElementById("trip-details");
  let loaded=false;
+ function scrollToTrip(){
+  requestAnimationFrame(()=>details.scrollIntoView({behavior:"smooth",block:"start"}));
+ }
  details.addEventListener("toggle",()=>{
-  if(details.open&&!loaded){loaded=true; loadTripStations();}
+  if(!details.open)return;
+  if(!loaded){
+   loaded=true;
+   // La prima volta la griglia è ancora vuota: si scorre solo dopo che
+   // loadTripStations ha popolato le card, altrimenti la sezione è ancora
+   // bassa (solo il titolo) e lo scroll sembra fermarsi dopo una riga.
+   loadTripStations().then(scrollToTrip);
+  }else{
+   scrollToTrip();
+  }
  });
- document.getElementById("trip-modal-close").addEventListener("click",closeTripModal);
- document.getElementById("trip-modal-backdrop").addEventListener("click",e=>{
-  if(e.target.id==="trip-modal-backdrop")closeTripModal();
+ document.getElementById("modal-close").addEventListener("click",closeModal);
+ document.getElementById("modal-backdrop").addEventListener("click",e=>{
+  if(e.target.id==="modal-backdrop")closeModal();
  });
  document.addEventListener("keydown",e=>{
-  if(e.key==="Escape")closeTripModal();
+  if(e.key==="Escape")closeModal();
  });
 }
 initTripSection();
+
+function attachStationClickHandlers(){
+ document.querySelectorAll("[data-station-id]").forEach(el=>{
+  el.addEventListener("click",()=>openStationModal(el.dataset.stationId));
+  el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openStationModal(el.dataset.stationId);}});
+ });
+}
 
 async function load(){
  const hero=document.getElementById("hero-station"),box=document.getElementById("compact-stations"),status=document.getElementById("worker-status");
@@ -373,14 +424,16 @@ async function load(){
   if(!res.ok)throw Error(`HTTP ${res.status}`);
   const raw=await res.json(); if(!raw.ok)throw Error("Worker non disponibile");
   const d=normalise(raw);
-  hero.innerHTML=makeHeroCard(cardData("vigo",d.vigo));
-  box.innerHTML=["monzon","moena"].map(k=>makeCompactCard(cardData(k,d[k]))).join("");
+  mainStationsCache={vigo:cardData("vigo",d.vigo),monzon:cardData("monzon",d.monzon),moena:cardData("moena",d.moena)};
+  hero.innerHTML=makeHeroCard(mainStationsCache.vigo);
+  box.innerHTML=["monzon","moena"].map(k=>makeCompactCard(mainStationsCache[k],k)).join("");
   status.textContent=`Pagina aggiornata alle ${time(d.workerTimestamp)}`;
   status.className="worker-status ok";
+  attachStationClickHandlers();
  }catch(e){
   console.error(e);
   hero.innerHTML=makeHeroCard({...MAIN_STATIONS.vigo,error:"Impossibile leggere i dati in questo momento"});
-  box.innerHTML=["monzon","moena"].map(k=>makeCompactCard({...MAIN_STATIONS[k],error:"Impossibile leggere i dati in questo momento"})).join("");
+  box.innerHTML=["monzon","moena"].map(k=>makeCompactCard({...MAIN_STATIONS[k],error:"Impossibile leggere i dati in questo momento"},k)).join("");
   status.textContent="⚠️ Dati principali non disponibili"; status.className="worker-status error";
  }
 }
