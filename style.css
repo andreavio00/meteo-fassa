@@ -113,6 +113,26 @@ details[open] .summary-arrow{transform:rotate(180deg)}
 .trip-content p{margin:9px 0;color:var(--ink-soft);font-size:10px}
 .trip-content code{background:var(--chip-bg);padding:1px 4px;border-radius:4px}
 
+/* --- Griglia stazioni gita --- */
+.trip-content .worker-status{margin-bottom:9px}
+.trip-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.trip-card{padding:10px;cursor:pointer;transition:box-shadow .15s,transform .15s}
+.trip-card:hover,.trip-card:focus-visible{box-shadow:0 4px 14px rgba(20,40,60,.12);transform:translateY(-1px);outline:none}
+.trip-card .compact-thr{margin-top:5px}
+.trip-rain{margin-top:6px;font-size:10px;color:var(--ink-soft)}
+.trip-card-offline{cursor:default;text-align:center}
+.trip-card-offline:hover,.trip-card-offline:focus-visible{box-shadow:0 2px 10px rgba(20,40,60,.07);transform:none}
+
+/* --- Modale dettaglio stazione gita --- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,25,35,.5);display:flex;align-items:flex-end;justify-content:center;z-index:100}
+.modal-backdrop[hidden]{display:none}
+.modal-sheet{position:relative;background:var(--card-bg);width:min(100%,520px);max-height:88vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:18px 16px 22px;box-shadow:0 -4px 24px rgba(0,0,0,.2)}
+.modal-close{position:absolute;top:10px;right:12px;width:30px;height:30px;border:none;border-radius:50%;background:var(--chip-bg);color:var(--ink-soft);font-size:14px;cursor:pointer}
+@media(min-width:600px){
+ .modal-backdrop{align-items:center}
+ .modal-sheet{border-radius:16px}
+}
+
 @media(max-width:380px){
  .page{width:calc(100% - 8px)}
  .hero-columns{gap:9px}.thermo-graph{width:22px}

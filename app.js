@@ -13,6 +13,21 @@ const MAIN_STATIONS={
 // tipico della valle (inverno rigido / estate mite in quota).
 const COMFORT_MIN=-10, COMFORT_MAX=35;
 
+// --- Meteo per una gita: stazioni in quota (worker separato) --------------
+const TRIP_WORKER_URL="https://gitemeteofassa.andrea-vio.workers.dev/";
+const TRIP_TIMEOUT=9000;
+
+// Icona in base al nome della stazione (nessun elenco fisso per id: così
+// una nuova stazione aggiunta lato worker riceve comunque un'icona sensata
+// senza dover toccare il frontend).
+function tripIcon(name){
+ const n=(name||"").toLowerCase();
+ if(n.includes("rifugio")||n.includes("capanna"))return "🛖";
+ if(n.includes("passo"))return "🚗";
+ if(n.includes("sass")||n.includes("cima")||n.includes("piz")||n.includes("pordoi"))return "🏔️";
+ return "⛰️";
+}
+
 function fetchWithTimeout(url,ms){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
  return fetch(url,{signal:c.signal}).finally(()=>clearTimeout(t));
@@ -234,6 +249,122 @@ function makeCompactCard(c){
   ${sourceLink(c)}
  </article>`;
 }
+
+// --- Card compatte griglia gita --------------------------------------------
+function tripCardHtml(s){
+ const icon=tripIcon(s.name);
+ const offline=s.status!=="online";
+ const rainRow=(s.rainToday!==null&&s.rainToday!==undefined)
+   ?`<div class="trip-rain">🌧️ ${num(s.rainToday)} mm oggi</div>`:"";
+ if(offline){
+  return `<article class="station-card trip-card trip-card-offline" data-trip-id="${s.id}" tabindex="0" role="button" aria-label="${s.name}, dati non disponibili">
+   <div class="card-title">${icon} <strong>${s.name}</strong></div>
+   <div class="quota">${s.altitude} m</div>
+   <p class="error-text">${s.status==="no-data"?"Dati non disponibili":"Stazione offline"}</p>
+  </article>`;
+ }
+ return `<article class="station-card trip-card" data-trip-id="${s.id}" tabindex="0" role="button" aria-label="Dettagli ${s.name}">
+  <div class="card-title">${icon} <strong>${s.name}</strong></div>
+  <div class="quota">${s.altitude} m</div>
+  <div class="temp-humidity-row compact-thr">
+   <span class="value-num compact-value">${num(s.temperature)}°</span>
+   <span class="value-num value-humidity compact-value">💧${num(s.humidity,0)}%</span>
+  </div>
+  ${rainRow}
+ </article>`;
+}
+
+function tripDetailRow(icon,label,value){
+ return `<div class="metric"><span class="metric-icon">${icon}</span><span class="metric-text"><small>${label}</small><strong>${value}</strong></span></div>`;
+}
+
+function tripModalHtml(s){
+ const icon=tripIcon(s.name);
+ const wd=s.windDirection?s.windDirection:"—";
+ const a=age(s.fetchedAt);
+ if(s.status!=="online"){
+  return `<div class="hero-top">
+   <span class="card-icon">${icon}</span>
+   <div><div class="station-name">${s.name}</div><div class="quota">${s.altitude} m · ${s.source}</div></div>
+  </div>
+  <p class="error-text" style="text-align:left;margin-top:14px">${s.status==="no-data"?"La stazione non sta al momento fornendo dati utilizzabili.":"Stazione risultata offline all'ultimo aggiornamento."}</p>`;
+ }
+ return `<div class="hero-top">
+  <span class="card-icon">${icon}</span>
+  <div><div class="station-name">${s.name}</div><div class="quota">${s.altitude} m · ${s.source}</div></div>
+ </div>
+ <div class="hero-values" style="margin-top:14px">
+  <div class="temp-humidity-row">
+   <span class="value-num">${num(s.temperature)}°</span>
+   <span class="value-num value-humidity">💧${num(s.humidity,0)}%</span>
+  </div>
+  ${feltRow(s.perceived)}
+  <div class="metrics">
+   ${tripDetailRow("🌡️","Punto di rugiada",`${num(s.dewPoint)}°`)}
+   ${tripDetailRow("🥶","Wind chill",s.windChill===null||s.windChill===undefined?"—":`${num(s.windChill)}°`)}
+   ${tripDetailRow("💨","Vento",`${num(s.wind)} km/h ${wd}`)}
+   ${tripDetailRow("〰️","Vento medio 10'",`${num(s.wind10)} km/h`)}
+   ${tripDetailRow("🌬️","Raffica",`${num(s.gust)} km/h`)}
+   ${tripDetailRow("⏲️","Pressione",`${num(s.pressure)} hPa`)}
+   ${tripDetailRow("🌧️","Pioggia",`${num(s.rainRate)} mm/h`)}
+   ${tripDetailRow("☔","Pioggia oggi",`${num(s.rainToday)} mm`)}
+  </div>
+ </div>
+ <div class="data-time ${a.c}" style="margin-top:14px"><span class="age-dot"></span>${s.updatedText?`Stazione: ${s.updatedText}`:`Letto alle ${time(s.fetchedAt)}`}${a.showDelay?` · ${a.label}`:""}</div>`;
+}
+
+let tripStationsCache=null;
+
+function openTripModal(id){
+ if(!tripStationsCache)return;
+ const s=tripStationsCache.find(x=>x.id===id);
+ if(!s)return;
+ document.getElementById("trip-modal-body").innerHTML=tripModalHtml(s);
+ document.getElementById("trip-modal-backdrop").hidden=false;
+ document.body.style.overflow="hidden";
+}
+function closeTripModal(){
+ document.getElementById("trip-modal-backdrop").hidden=true;
+ document.body.style.overflow="";
+}
+
+async function loadTripStations(){
+ const grid=document.getElementById("trip-grid"),status=document.getElementById("trip-status");
+ status.textContent="Aggiornamento dati…"; status.className="worker-status";
+ try{
+  const res=await fetchWithTimeout(`${TRIP_WORKER_URL}?_=${Date.now()}`,TRIP_TIMEOUT);
+  if(!res.ok)throw Error(`HTTP ${res.status}`);
+  const raw=await res.json();
+  if(!raw.stations)throw Error("Formato dati inatteso");
+  tripStationsCache=raw.stations;
+  grid.innerHTML=raw.stations.map(tripCardHtml).join("");
+  status.textContent=`Dati aggiornati alle ${time(raw.generatedAt)}`;
+  status.className="worker-status ok";
+  grid.querySelectorAll("[data-trip-id]").forEach(el=>{
+   el.addEventListener("click",()=>openTripModal(el.dataset.tripId));
+   el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openTripModal(el.dataset.tripId);}});
+  });
+ }catch(e){
+  console.error(e);
+  status.textContent="⚠️ Dati stazioni in quota non disponibili"; status.className="worker-status error";
+ }
+}
+
+function initTripSection(){
+ const details=document.getElementById("trip-details");
+ let loaded=false;
+ details.addEventListener("toggle",()=>{
+  if(details.open&&!loaded){loaded=true; loadTripStations();}
+ });
+ document.getElementById("trip-modal-close").addEventListener("click",closeTripModal);
+ document.getElementById("trip-modal-backdrop").addEventListener("click",e=>{
+  if(e.target.id==="trip-modal-backdrop")closeTripModal();
+ });
+ document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")closeTripModal();
+ });
+}
+initTripSection();
 
 async function load(){
  const hero=document.getElementById("hero-station"),box=document.getElementById("compact-stations"),status=document.getElementById("worker-status");

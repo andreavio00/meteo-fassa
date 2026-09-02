@@ -40,17 +40,26 @@
 </section>
 
 <section class="trip-section">
-<details id="trentino-details">
+<details id="trip-details">
 <summary>
-<span><strong>🌦️ Meteo per una gita</strong><small>Stazioni di riferimento — in preparazione</small></span>
+<span><strong>🌦️ Meteo per una gita</strong><small>Stazioni in quota della valle</small></span>
 <span class="summary-arrow">▼</span>
 </summary>
 <div class="trip-content">
-<p>Questa sezione verrà completata scegliendo le stazioni più utili per valutare le condizioni salendo di quota (dati Meteo Trentino già disponibili in <code>data/extra-stations.json</code>).</p>
+<div id="trip-status" class="worker-status">Tocca per caricare i dati…</div>
+<div id="trip-grid" class="trip-grid"></div>
 </div>
 </details>
 </section>
 </main>
+
+<div id="trip-modal-backdrop" class="modal-backdrop" hidden>
+<div class="modal-sheet" role="dialog" aria-modal="true">
+<button id="trip-modal-close" class="modal-close" aria-label="Chiudi">✕</button>
+<div id="trip-modal-body"></div>
+</div>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>
