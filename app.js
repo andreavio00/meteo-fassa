@@ -341,6 +341,104 @@ function tripModalHtml(s){
  <div class="data-time ${a.c}" style="margin-top:14px"><span class="age-dot"></span>${s.updatedText?`Stazione: ${s.updatedText}`:`Letto alle ${time(s.fetchedAt)}`}${a.showDelay?` · ${a.label}`:""}</div>`;
 }
 
+// --- Previsioni locali meteo.report: dati triorari ------------------------
+// Il Forecast di meteo.report usa direttamente il JSON pubblico della
+// località. Il gruppo "180" contiene le previsioni a intervalli di 3 ore.
+const METEO_REPORT_FORECAST_URL="https://meteofassa-forecast-proxy.andrea-vio.workers.dev/";
+const FORECAST_TIMEOUT=9000;
+
+function forecastValue(o, keys){
+ for(const k of keys){
+  const v=o?.[k];
+  if(v!==undefined&&v!==null&&v!=="")return v;
+ }
+ return null;
+}
+function forecastSkyIcon(value){
+ const s=String(value??"").toLowerCase();
+ if(s.includes("tempor")||s.includes("thunder")||s.includes("storm")||s.includes("fulmin"))return "⛈️";
+ if(s.includes("neve")||s.includes("snow"))return "🌨️";
+ if(s.includes("piogg")||s.includes("rain")||s.includes("rovesc")||s.includes("shower"))return "🌦️";
+ if(s.includes("coperto")||s.includes("overcast"))return "☁️";
+ if(s.includes("nuvol")||s.includes("cloud")||s.includes("parzial")||s.includes("partly"))return "⛅";
+ if(s.includes("sereno")||s.includes("sunny")||s.includes("clear"))return "☀️";
+ return "🌤️";
+}
+function forecastDir(v){return v===null?"—":dir(v);}
+function forecastCardHtml(item){
+ const sky=item.sky;
+ const rain=item.rain;
+ const prob=item.prob;
+ const gust=item.gust;
+ return `<article class="forecast-item">
+  <div class="forecast-hour">${item.hour}</div>
+  <div class="forecast-sky" title="${sky||""}">${forecastSkyIcon(sky)}</div>
+  <strong class="forecast-temp">${num(item.temp)}°</strong>
+  <div class="forecast-rain">☔ ${rain===null?"—":num(rain)} mm</div>
+  <div class="forecast-wind">💨 ${item.wind===null?"—":num(item.wind)} km/h ${forecastDir(item.windDir)}</div>
+  ${prob!==null?`<div class="forecast-prob">${num(prob,0)}% pioggia</div>`:""}
+  ${gust!==null?`<div class="forecast-gust">raffiche ${num(gust)} km/h</div>`:""}
+ </article>`;
+}
+async function loadForecast(){
+ const grid=document.getElementById("forecast-grid"),status=document.getElementById("forecast-status");
+ status.textContent="Aggiornamento previsioni…"; status.className="worker-status";
+ try{
+  const res=await fetchWithTimeout(`${METEO_REPORT_FORECAST_URL}?_=${Date.now()}`,FORECAST_TIMEOUT);
+  if(!res.ok)throw Error(`HTTP ${res.status}`);
+  const raw=await res.json();
+  if(!raw["180"]||typeof raw["180"]!=="object")throw Error("Formato previsioni inatteso");
+  const base=dateOf(raw.start);
+  if(!base)throw Error("Ora di inizio non disponibile");
+
+  // Il formato ufficiale di meteo.report usa le chiavi dei time-layout
+  // come indice e cinque variabili principali: temperature, rain_fall,
+  // sky_condition, wind_direction e wind_speed.
+  const rows=Object.entries(raw["180"])
+    .map(([layout,o])=>({layout,o}))
+    .sort((a,b)=>Number(a.layout)-Number(b.layout));
+
+  const all=rows.map((row,i)=>{
+    const d=new Date(base.getTime()+i*3*60*60*1000);
+    const o=row.o||{};
+    return {
+      date:d,
+      hour:time(d),
+      temp:numOrNull(o.temperature),
+      rain:numOrNull(o.rain_fall),
+      wind:numOrNull(o.wind_speed),
+      windDir:numOrNull(o.wind_direction),
+      sky:o.sky_condition ?? null
+    };
+  });
+
+  // Prendiamo le fasce che comprendono le prossime ~24 ore.
+  // Se il feed parte già nel passato, non perdiamo dati: usiamo le 8
+  // fasce più vicine all'ora corrente.
+  const now=Date.now();
+  let future=all.filter(x=>x.date.getTime()+90*60*1000>=now);
+  if(!future.length)future=all.slice(-8);
+  const cards=future.slice(0,8);
+
+  grid.innerHTML=cards.map(forecastCardHtml).join("");
+  const stamp=raw.start?time(raw.start):"—";
+  status.textContent=`Previsioni aggiornate · ${stamp}`; status.className="worker-status ok";
+ }catch(e){
+  console.error(e);
+  status.textContent="⚠️ Previsioni non disponibili al momento"; status.className="worker-status error";
+  grid.innerHTML="";
+ }
+}
+function initForecastSection(){
+ const details=document.getElementById("forecast-details");
+ let loaded=false;
+ details.addEventListener("toggle",()=>{
+  if(!details.open)return;
+  if(!loaded){loaded=true;loadForecast();}
+ });
+}
+initForecastSection();
+
 let tripStationsCache=null;
 
 // --- Modale generica (usata sia dalle card principali sia dalla gita) -----

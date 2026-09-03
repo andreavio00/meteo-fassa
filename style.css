@@ -88,16 +88,23 @@ h1{margin:0 0 7px;font-size:clamp(24px,5vw,31px);font-weight:800;letter-spacing:
 
 /* --- Previsioni --- */
 .forecast-section{margin-top:9px}
-.forecast-card{background:var(--card-bg);border-radius:15px;padding:12px 13px;box-shadow:0 2px 9px rgba(20,40,60,.06);border:1px solid var(--line)}
-.forecast-top{display:flex;align-items:center;gap:9px}
-.forecast-icon{font-size:21px;opacity:.85}
-.forecast-heading{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.forecast-details{background:var(--card-bg);border-radius:14px;box-shadow:0 2px 9px rgba(20,40,60,.06);overflow:hidden;border:1px solid var(--line)}
+.forecast-details summary{padding:12px 13px}
+.forecast-summary-main{display:flex;align-items:center;gap:9px;min-width:0}
+.forecast-icon{font-size:21px;opacity:.85;flex:0 0 auto}
+.forecast-heading{min-width:0;display:flex;flex-direction:column;gap:2px}
 .forecast-heading strong{font-size:13px;color:#3a4753}
-.forecast-heading small{font-size:10px;color:var(--ink-soft)}
-.coming-soon{padding:4px 8px;border-radius:999px;background:var(--chip-bg);color:var(--accent);font-size:9px;font-weight:700;white-space:nowrap}
-.forecast-link-row{margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
-.forecast-link{font-size:11px;color:var(--ink-soft)}
-.forecast-link em{font-style:normal;font-size:9px;background:var(--chip-bg);padding:2px 6px;border-radius:999px;margin-left:4px}
+.forecast-heading small{font-size:10px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.forecast-content{padding:0 9px 10px;border-top:1px solid var(--line)}
+.forecast-content .worker-status{margin:9px 4px}
+.forecast-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.forecast-item{min-width:0;background:#f8faf9;border:1px solid var(--line);border-radius:11px;padding:8px 5px;text-align:center}
+.forecast-hour{font-size:10px;font-weight:750;color:var(--ink-soft)}
+.forecast-sky{font-size:21px;line-height:1.2;margin:4px 0 2px}
+.forecast-temp{display:block;font-size:17px;line-height:1.15}
+.forecast-rain,.forecast-wind,.forecast-prob,.forecast-gust{font-size:8px;line-height:1.25;color:var(--ink-soft);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.forecast-attribution{margin:8px 3px 0;font-size:8px;color:var(--ink-soft);text-align:center}
+@media(max-width:380px){.forecast-grid{gap:5px}.forecast-item{padding:7px 3px}.forecast-temp{font-size:16px}.forecast-rain,.forecast-wind,.forecast-prob,.forecast-gust{font-size:7px}}
 
 /* --- Trip section --- */
 .trip-section{margin-top:9px}
