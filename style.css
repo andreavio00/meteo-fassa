@@ -150,3 +150,23 @@ details[open] .summary-arrow{transform:rotate(180deg)}
 @media(min-width:761px){
  .metrics{grid-template-columns:1fr 1fr 1fr}
 }
+
+
+/* Per un'escursione: selezione zone e fonti aggiuntive */
+.trip-zones{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
+.trip-zone{border:1px solid rgba(74,102,112,.35);background:rgba(255,255,255,.75);border-radius:999px;padding:8px 12px;font:inherit;font-size:.86rem;cursor:pointer;}
+.trip-zone.active{font-weight:700;}
+.trip-card[hidden]{display:none!important;}
+.trip-extras{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px;}
+.trip-extra-card{border:1px solid rgba(74,102,112,.18);border-radius:14px;padding:12px;background:rgba(255,255,255,.7);}
+.trip-extra-pending{opacity:.72;}
+.trip-extra-head{display:flex;gap:9px;align-items:center;margin-bottom:8px;}
+.trip-extra-head>span{font-size:1.35rem;}
+.trip-extra-head strong,.trip-extra-head small{display:block;}
+.trip-extra-head small{opacity:.7;margin-top:2px;}
+.trip-extra-card p{font-size:.82rem;margin:6px 0 10px;line-height:1.35;}
+.trip-extra-open{border:0;border-radius:9px;padding:8px 10px;cursor:pointer;font:inherit;font-size:.82rem;}
+.trip-iframe-modal{height:min(78vh,760px);display:flex;flex-direction:column;gap:10px;}
+.trip-iframe-modal h2{margin:0;font-size:1.15rem;}
+.trip-iframe-modal iframe{width:100%;height:100%;border:0;border-radius:10px;background:#fff;}
+@media(max-width:600px){.trip-zone{font-size:.78rem;padding:7px 9px}.trip-extras{grid-template-columns:1fr}}

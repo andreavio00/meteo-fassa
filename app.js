@@ -458,6 +458,60 @@ function openTripModal(id){
  openModal(tripModalHtml(s));
 }
 
+const TRIP_ZONE_BY_ID={
+ gardeccia:"catinaccio",
+ principe:"catinaccio",
+ contrin:"catinaccio",
+ passosella:"sella",
+ pordoi:"sella",
+ pizboe:"sella",
+ rolle:"moena",
+ paradiso:"moena"
+};
+
+// Fonti aggiuntive che non vengono ricostruite dal worker: manteniamo la
+// pagina originale in un pannello interno, senza alterare i dati delle
+// stazioni già gestite dal worker.
+const TRIP_EXTRA_SOURCES={
+ marmolada:[
+  {name:"Punta Penia",quota:"3343 m",icon:"🏔️",url:"https://www.marmoladameteo.it/puntapenia/index.php",kind:"iframe",note:"MarmoladaMeteo · dati della stazione"},
+  {name:"Previsioni Aeronautica Militare",quota:"Marmolada / Trentino-Alto Adige",icon:"🛰️",url:"https://www.meteoam.it/it/trentino-alto-adige",kind:"link",note:"Previsioni ufficiali regionali"}
+ ],
+ sella:[
+  {name:"Col dei Rossi",quota:"2385 m",icon:"🌬️",url:"https://www.dolomitesmeteo.it/coldeirossi/",kind:"iframe",note:"DolomitesMeteo · osservatorio meteorologico"},
+  {name:"Col Rodella",quota:"—",icon:"🏔️",url:"https://icarusfassa.it/stazione-meteo-icarus-flying-team/",kind:"iframe",note:"Icarus Flying Team · pagina della stazione"}
+ ],
+ moena:[
+  // Le tre stazioni MeteoPredazzo restano volutamente fuori dal worker
+  // finché non disponiamo degli URL/endpoint esatti delle pagine dati.
+  {name:"Torre di Pisa",quota:"—",icon:"🏔️",kind:"pending",note:"MeteoPredazzo · sorgente da collegare"},
+  {name:"Gardonè",quota:"—",icon:"🏔️",kind:"pending",note:"MeteoPredazzo · sorgente da collegare"},
+  {name:"Passo Feudo",quota:"—",icon:"🏔️",kind:"pending",note:"MeteoPredazzo · sorgente da collegare"}
+ ]
+};
+
+function tripExtraHtml(item){
+ if(item.kind==="pending") return `<article class="trip-extra-card trip-extra-pending"><div class="trip-extra-head"><span>${item.icon}</span><div><strong>${item.name}</strong><small>${item.quota}</small></div></div><p>${item.note}</p></article>`;
+ if(item.kind==="link") return `<article class="trip-extra-card"><div class="trip-extra-head"><span>${item.icon}</span><div><strong>${item.name}</strong><small>${item.quota}</small></div></div><p>${item.note}</p><a class="forecast-link" href="${item.url}" target="_blank" rel="noopener noreferrer">Apri fonte ufficiale ↗</a></article>`;
+ return `<article class="trip-extra-card"><div class="trip-extra-head"><span>${item.icon}</span><div><strong>${item.name}</strong><small>${item.quota}</small></div></div><p>${item.note}</p><button type="button" class="trip-extra-open" data-src="${item.url}" data-title="${item.name}">Apri dati in pagina</button></article>`;
+}
+
+function renderTripZone(zone){
+ const grid=document.getElementById("trip-grid"),extras=document.getElementById("trip-extras");
+ grid.querySelectorAll("[data-trip-id]").forEach(el=>{el.hidden=TRIP_ZONE_BY_ID[el.dataset.tripId]!==zone;});
+ const extra=TRIP_EXTRA_SOURCES[zone]||[];
+ extras.innerHTML=extra.map(tripExtraHtml).join("");
+ extras.querySelectorAll("[data-src]").forEach(btn=>btn.addEventListener("click",()=>openModal(`<div class="trip-iframe-modal"><h2>${btn.dataset.title}</h2><iframe src="${btn.dataset.src}" title="${btn.dataset.title}" loading="lazy"></iframe></div>`)));
+}
+
+function initTripZones(){
+ document.querySelectorAll(".trip-zone").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".trip-zone").forEach(b=>b.classList.toggle("active",b===btn));
+  renderTripZone(btn.dataset.zone);
+ }));
+}
+initTripZones();
+
 async function loadTripStations(){
  const grid=document.getElementById("trip-grid"),status=document.getElementById("trip-status");
  status.textContent="Aggiornamento dati…"; status.className="worker-status";
@@ -474,6 +528,7 @@ async function loadTripStations(){
    el.addEventListener("click",()=>openTripModal(el.dataset.tripId));
    el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openTripModal(el.dataset.tripId);}});
   });
+  renderTripZone(document.querySelector(".trip-zone.active")?.dataset.zone||"catinaccio");
  }catch(e){
   console.error(e);
   status.textContent="⚠️ Dati stazioni in quota non disponibili"; status.className="worker-status error";

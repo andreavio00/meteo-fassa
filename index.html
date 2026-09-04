@@ -46,12 +46,19 @@
 <section class="trip-section">
 <details id="trip-details">
 <summary>
-<span><strong>🌦️ Meteo per una gita</strong><small>Stazioni in quota della valle</small></span>
+<span><strong>🥾 Per un’escursione</strong><small>Situazione in quota e previsioni</small></span>
 <span class="summary-arrow">▼</span>
 </summary>
 <div class="trip-content">
+<div class="trip-zones" role="tablist" aria-label="Zone escursioni">
+<button class="trip-zone active" data-zone="catinaccio" type="button">Catinaccio</button>
+<button class="trip-zone" data-zone="sella" type="button">Gruppo del Sella e Sassolungo</button>
+<button class="trip-zone" data-zone="marmolada" type="button">Marmolada e Val San Nicolò</button>
+<button class="trip-zone" data-zone="moena" type="button">Moena e Latemar</button>
+</div>
 <div id="trip-status" class="worker-status">Tocca per caricare i dati…</div>
 <div id="trip-grid" class="trip-grid"></div>
+<div id="trip-extras" class="trip-extras"></div>
 </div>
 </details>
 </section>
