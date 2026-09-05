@@ -1,0 +1,390 @@
+/**
+ * Meteo Fassa - Worker stazioni per escursioni
+ *
+ * GET /                         tutte le stazioni normalizzate
+ * GET /?station=gardeccia       una stazione
+ * GET /?stations               catalogo
+ * GET /?raw=gardeccia           HTML grezzo della sorgente
+ * GET /?=all                 tutte le sorgenti grezze
+ *
+ * Il RAW endpoint è intenzionale: serve a diagnosticare rapidamente
+ * cambiamenti nelle pagine sorgenti senza modificare il frontend.
+ */
+
+const STATIONS = {
+  gardeccia: {
+    name: "Rifugio Gardeccia", altitude: 1949, source: "MeteoSystem",
+    url: "https://www.meteosystem.com/wlip/gardeccia/dati.php"
+  },
+  principe: {
+    name: "Rifugio Passo Principe", altitude: 2600, source: "DolomitesMeteo",
+    url: "https://www.dolomitesmeteo.it/rosengartenpassoprincipe/"
+  },
+  sasspordoi: {
+    name: "Sass Pordoi", altitude: 2950, source: "DolomitesMeteo",
+    url: "https://www.dolomitesmeteo.it/sasspordoi/"
+  },
+  rolle: {
+    name: "Passo Rolle", altitude: 1980, source: "PrimieroMeteo",
+    url: "https://www.primierometeo.it/passorolle/"
+  },
+  paradiso: {
+    name: "Cima Paradiso", altitude: 2180, source: "PrimieroMeteo",
+    url: "https://www.primierometeo.it/paradiso/"
+  },
+  // NB: la pagina "vetrina" https://www.dolomitesmeteo.it/passosella/ è solo un
+  // wrapper con un <iframe> che carica i dati veri da tabella.html: puntando
+  // al wrapper il parser non trovava mai i valori (da qui i campi a null nel
+  // JSON). Si punta direttamente alla pagina dati dentro l'iframe.
+  passosella: {
+    name: "Passo Sella", altitude: 2240, source: "DolomitesMeteo / Meteotriveneto",
+    url: "https://www.dolomitesmeteo.it/passosella/tabella.html"
+  },
+  pizboe: {
+    name: "Capanna Piz Fassa - Piz Boè", altitude: 3152,
+    source: "DolomitesMeteo / Meteotriveneto",
+    url: "https://www.dolomitesmeteo.it/pizboe/"
+  }
+};
+
+const FETCH_HEADERS = {
+  "User-Agent": "MeteoFassa-Gite/1.0",
+  "Accept": "text/html,application/xhtml+xml"
+};
+
+function headers(type="application/json; charset=utf-8") {
+  return {
+    "Content-Type": type,
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "no-store"
+  };
+}
+
+function json(data, status=200) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status, headers: headers()
+  });
+}
+
+function html(data, status=200) {
+  return new Response(data, {
+    status, headers: headers("text/html; charset=utf-8")
+  });
+}
+
+// Mappa delle entità HTML più comuni nelle pagine italiane di queste fonti
+// (vocali accentate, virgolette tipografiche, ecc.). Il bug precedente:
+// clean() decodificava solo &nbsp; &deg; &amp; &quot; &#39; e lasciava
+// intatte entità come &agrave;, quindi testi come "Umidit&agrave;" o
+// "Velocit&agrave;" non venivano mai riconosciuti dalle regex che cercano
+// "Umidità"/"Velocità" (con l'accento vero), facendo risultare a null campi
+// che invece erano presenti nella pagina sorgente.
+const HTML_ENTITIES = {
+  agrave: "à", egrave: "è", igrave: "ì", ograve: "ò", ugrave: "ù",
+  Agrave: "À", Egrave: "È", Igrave: "Ì", Ograve: "Ò", Ugrave: "Ù",
+  aacute: "á", eacute: "é", iacute: "í", oacute: "ó", uacute: "ú",
+  acirc: "â", ecirc: "ê", icirc: "î", ocirc: "ô", ucirc: "û",
+  ccedil: "ç", ntilde: "ñ",
+  lsquo: "'", rsquo: "'", ldquo: "\u201C", rdquo: "\u201D",
+  hellip: "…", mdash: "—", ndash: "–", laquo: "«", raquo: "»",
+  euro: "€", nbsp: " ", deg: "°", amp: "&", quot: '"', apos: "'"
+};
+
+function decodeEntities(s) {
+  return s
+    .replace(/&([a-zA-Z]+);/g, (m, name) =>
+      Object.prototype.hasOwnProperty.call(HTML_ENTITIES, name) ? HTML_ENTITIES[name] : m
+    )
+    .replace(/&#(\d+);/g, (m, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#[xX]([0-9a-fA-F]+);/g, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
+
+function clean(s) {
+  return decodeEntities(
+    s
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+  ).replace(/\s+/g, " ").trim();
+}
+
+function number(text, patterns) {
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) {
+      const n = Number(m[1].replace(",", "."));
+      if (Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+}
+
+function string(text, patterns) {
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return m[1].trim();
+  }
+  return null;
+}
+
+function toNum(s) {
+  const n = Number(String(s).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+// Nel formato WeatherLink/MeteoSystem la riga "Velocità" contiene tre numeri
+// in sequenza: attuale, media 10 min, raffica (es. "Velocità 0.0 Km/h 0.0 Km/h - 19.3 Km/h 12.26").
+// Le etichette "MEDIA 10 MIN" e "RAFFICA" sono intestazioni di colonna che nel
+// testo ripulito finiscono lontane dai valori, quindi cercarle come prefisso
+// del numero (come faceva il codice originale) non funziona: va fatto un
+// match posizionale sull'intera riga. Se non trova questo schema, ripiega
+// sulle vecchie etichette esplicite (utile per altre fonti/formati).
+function parseWind(text) {
+  const row = text.match(
+    /Velocit[aà]\s+(-?\d+(?:[.,]\d+)?)\s*Km\/h\s+(-?\d+(?:[.,]\d+)?)\s*Km\/h\D*?(-?\d+(?:[.,]\d+)?)\s*Km\/h/i
+  );
+  if (row) {
+    return { speed: toNum(row[1]), avg10: toNum(row[2]), gust: toNum(row[3]) };
+  }
+  return {
+    speed: number(text, [
+      /Velocità\s+(-?\d+(?:[.,]\d+)?)\s*km\/h/i,
+      /Velocità attuale[:\s]+(-?\d+(?:[.,]\d+)?)\s*Km\/h/i,
+      /Vento[:\s]+(-?\d+(?:[.,]\d+)?)\s*km\/h/i
+    ]),
+    avg10: number(text, [
+      /Media 10 min[:\s]+(-?\d+(?:[.,]\d+)?)\s*km\/h/i,
+      /Media[:\s]+(-?\d+(?:[.,]\d+)?)\s*km\/h/i
+    ]),
+    gust: number(text, [
+      /Raffica vento max[:\s]+(-?\d+(?:[.,]\d+)?)\s*km\/h/i,
+      /Raffica giornaliera[:\s]+(-?\d+(?:[.,]\d+)?)\s*Km\/h/i,
+      /Raffica max[:\s]+(-?\d+(?:[.,]\d+)?)\s*km\/h/i,
+      /ultim'ora[:\s]*(-?\d+(?:[.,]\d+)?)\s*km\/h/i,
+      /\bVento\s+(-?\d+(?:[.,]\d+)?)\s*km\/h/i
+    ])
+  };
+}
+
+// Alcune fonti (rete DolomitesMeteo/Meteotriveneto, template "ajax-dashboard.php")
+// non mettono un'etichetta testuale  del valore: il numero sta dentro
+// <span id="ajaxtemp">...</span> senza la parola "Temperatura" da nessuna parte.
+// Per queste leggiamo il valore direttamente dall'id, sull'HTML originale
+// (prima di ripulire i tag), provando più id candidati in ordine.
+function fieldById(rawHtml, id) {
+  const re = new RegExp('id=["\']' + id + '["\'][^>]*>([\\s\\S]*?)</span>', 'i');
+  const m = rawHtml.match(re);
+  return m ? clean(m[1]) : null;
+}
+
+function numFromId(rawHtml, ids) {
+  for (const id of ids) {
+    const v = fieldById(rawHtml, id);
+    if (v) {
+      const m = v.match(/(-?\d+(?:[.,]\d+)?)/);
+      if (m) {
+        const n = toNum(m[1]);
+        if (n !== null) return n;
+      }
+    }
+  }
+  return null;
+}
+
+function parse(htmlText, id, cfg) {
+  const text = clean(htmlText);
+
+  const result = {
+    id,
+    name: cfg.name,
+    altitude: cfg.altitude,
+    source: cfg.source,
+    status: /OFFLINE|non disponibile|stazione non attiva/i.test(text)
+      ? "offline" : "online",
+
+    // Sulla rete DolomitesMeteo/Meteotriveneto (es. principe, pordoi, passosella,
+    // pizboe) temperatura e umidità non hanno un'etichetta testuale: il valore
+    // sta solo dentro <span id="ajaxtemp">/<span id="ajaxhumidity">. Si prova
+    // prima l'id, poi si ripiega sull'etichetta testuale (fonti MeteoSystem).
+    temperature: numFromId(htmlText, ["ajaxtemp"]) ?? number(text, [
+      /Temperatura(?:\s+attuale)?[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i,
+      /Temperatura[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i
+    ]),
+
+    humidity: numFromId(htmlText, ["ajaxhumidity"]) ?? number(text, [
+      /Umidità(?:\s+relativa)?[:\s]+(\d+(?:[.,]\d+)?)\s*%/i,
+      /UR[:\s]+(\d+(?:[.,]\d+)?)\s*%/i
+    ]),
+
+    dewPoint: number(text, [
+      /Punto di rugiada\s*(-?\d+(?:[.,]\d+)?)°C/i,
+      /Dew Point[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i
+    ]) ?? numFromId(htmlText, ["ajaxdew0", "ajaxdew"]),
+
+    // "Temp. percepita" (DolomitesMeteo) e "Heat Index"/"Wind Chill"
+    // (MeteoSystem) sono equivalenti: si prova ogni pattern in ordine, e se un
+    // valore è assente ("-") il pattern semplicemente non matcha e si passa
+    // al successivo.
+    perceived: number(text, [
+      /Temp\.\s*percepita\s*(-?\d+(?:[.,]\d+)?)°C/i,
+      /Temperatura percepita[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i,
+      /Heat Index[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i,
+      /Wind Chill[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i
+    ]) ?? numFromId(htmlText, ["ajaxapparenttemp"]),
+
+    heatIndex: number(text, [
+      /Heat Index[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i
+    ]),
+
+    // "Temp. vento" (DolomitesMeteo) = wind chill
+    windChill: number(text, [
+      /Wind Chill[:\s]+(-?\d+(?:[.,]\d+)?)\s*°?C/i,
+      /Temp\.\s*vento[:\s]*(-?\d+(?:[.,]\d+)?)\s*°?C/i
+    ]) ?? numFromId(htmlText, ["ajaxwindchillo", "ajaxwindchill"]),
+
+    pressure: number(text, [
+      /Pressione\s+(-?\d+(?:[.,]\d+)?)\s*hpa/i,
+      /Pressione[:\s]+(-?\d+(?:[.,]\d+)?)\s*hPa/i
+    ]) ?? numFromId(htmlText, ["ajaxbaro"]),
+
+    ...(() => {
+      const w = parseWind(text);
+      const speed = w.speed ?? numFromId(htmlText, ["ajaxwind", "ajaxwind0", "ajaxwind2"]);
+      const gust = w.gust ?? number(text, [
+        // Formato "Raffica vento max 25.9 SE ore 09:32" (Passo Sella): il
+        // numero non è seguito da "km/h" ma direttamente dalla direzione.
+        /Raffica vento\s*max[:\s]+(-?\d+(?:[.,]\d+)?)/i
+      ]);
+      return { wind: speed, wind10: w.avg10, gust };
+    })(),
+
+    rainRate: number(text, [
+      /Rain Rate[:\s]+(-?\d+(?:[.,]\d+)?)\s*mm\/h/i,
+      /Intensità pioggia\s+(-?\d+(?:[.,]\d+)?)\s*mm\/hr/i,
+      /Intensità Pioggia[:\s]+(-?\d+(?:[.,]\d+)?)\s*mm\/h/i,
+      /\(\s*(-?\d+(?:[.,]\d+)?)\s*mm\/hr\s*\)/i
+    ]) ?? numFromId(htmlText, ["ajaxrainratehr0", "ajaxrainratehr"]),
+
+    rainToday: number(text, [
+      /Pioggia Giornaliera[:\s]+(-?\d+(?:[.,]\d+)?)\s*mm/i,
+      /Pioggia oggi[:\s]+(-?\d+(?:[.,]\d+)?)\s*mm/i,
+      /Pioggia giorno[:\s]+(-?\d+(?:[.,]\d+)?)\s*mm/i,
+      /Pioggia\s+(-?\d+(?:[.,]\d+)?)\s*mm\b/i
+    ]) ?? numFromId(htmlText, ["ajaxrain0", "ajaxrain"]),
+
+    windDirection: string(text, [
+      /direzione\s*(?:da\s+)?([A-Z]{1,3})\b/i
+    ]),
+
+    updatedText: string(text, [
+      // Il gruppo "(?:alle\s+ore|ore)" è opzionale: alcune fonti (es. Passo
+      // Sella) scrivono "Dati aggiornati al DATA ORA" senza la parola "ore"
+      // fra data e ora, altre (es. Gardeccia) scrivono "... alle ore ORA".
+      /Dati aggiornati (?:al|il)\s+(\d{1,2}\/\d{1,2}\/\d{2,4}(?:\s+(?:alle\s+ore|ore))?\s+\d{1,2}[:.]\d{2}(?::\d{2})?)/i,
+      /Aggiornamento[:\s]+(\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}(?::\d{2})?)/i
+    ]),
+
+    fetchedAt: new Date().toISOString()
+  };
+
+  // Se la pagina risponde 200 ma non siamo riusciti a estrarre nessun dato
+  // utile (es. pagina "vetrina" con solo un iframe, o formato cambiato),
+  // non ha senso dichiararla "online": segnaliamo "no-data" così è
+  // distinguibile a colpo d'occhio da una stazione che sta davvero
+  // trasmettendo dati.
+  if (result.status === "online") {
+    const hasData = [
+      result.temperature, result.humidity, result.wind,
+      result.wind10, result.gust, result.pressure
+    ].some(v => v !== null && v !== undefined);
+    if (!hasData) result.status = "no-data";
+  }
+
+  return result;
+}
+
+async function getRaw(id) {
+  const cfg = STATIONS[id];
+  if (!cfg) return json({error:"Stazione sconosciuta", available:Object.keys(STATIONS)},404);
+
+  try {
+    const r = await fetch(cfg.url, {headers:FETCH_HEADERS, cf:{cacheTtl:0}});
+    return html(await r.text(), r.status);
+  } catch (e) {
+    return json({error:String(e?.message || e), url:cfg.url},502);
+  }
+}
+
+async function getStation(id) {
+  const cfg = STATIONS[id];
+  try {
+    const r = await fetch(cfg.url, {headers:FETCH_HEADERS, cf:{cacheTtl:0}});
+    const body = await r.text();
+
+    if (!r.ok) {
+      return {
+        id, name:cfg.name, altitude:cfg.altitude, source:cfg.source,
+        status:"error", httpStatus:r.status, url:cfg.url
+      };
+    }
+
+    return parse(body,id,cfg);
+  } catch (e) {
+    return {
+      id, name:cfg.name, altitude:cfg.altitude, source:cfg.source,
+      status:"error", url:cfg.url, error:String(e?.message || e)
+    };
+  }
+}
+
+export default {
+  async fetch(request) {
+    if (request.method === "OPTIONS")
+      return new Response(null,{status:204,headers:headers()});
+
+    const u = new URL(request.url);
+
+    if (u.searchParams.has("stations")) {
+      return json({
+        stations:Object.entries(STATIONS).map(([id,s])=>({
+          id,name:s.name,altitude:s.altitude,source:s.source,url:s.url
+        }))
+      });
+    }
+
+    const raw = u.searchParams.get("raw");
+    if (raw) {
+      if (raw === "all") {
+        const result = {};
+        await Promise.all(Object.entries(STATIONS).map(async ([id,s])=>{
+          try {
+            const r=await fetch(s.url,{headers:FETCH_HEADERS,cf:{cacheTtl:0}});
+            result[id]={url:s.url,status:r.status,html:await r.text()};
+          } catch(e) {
+            result[id]={url:s.url,error:String(e?.message || e)};
+          }
+        }));
+        return json(result);
+      }
+      return getRaw(raw);
+    }
+
+    const one = u.searchParams.get("station");
+    if (one) {
+      if (!STATIONS[one])
+        return json({error:"Stazione sconosciuta",available:Object.keys(STATIONS)},404);
+      return json(await getStation(one));
+    }
+
+    const ids=Object.keys(STATIONS);
+    const stations=await Promise.all(ids.map(getStation));
+
+    return json({
+      version:"1.0",
+      generatedAt:new Date().toISOString(),
+      count:stations.length,
+      stations
+    });
+  }
+};
