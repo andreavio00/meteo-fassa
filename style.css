@@ -97,23 +97,70 @@ h1{margin:0 0 7px;font-size:clamp(24px,5vw,31px);font-weight:800;letter-spacing:
 .forecast-heading small{font-size:10px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .forecast-content{padding:0 9px 10px;border-top:1px solid var(--line)}
 .forecast-content .worker-status{margin:9px 4px}
-.forecast-tabs{display:flex;gap:6px;overflow-x:auto;padding:1px 3px 8px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-.forecast-tab{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:#f8faf9;color:var(--ink-soft);padding:6px 9px;font:inherit;font-size:9px;font-weight:750;cursor:pointer;white-space:nowrap}
-.forecast-tab.active{background:#fff;color:#3a4753;border-color:#aebbc4;box-shadow:0 2px 6px rgba(20,40,60,.08)}
+.forecast-tabs{
+ display:flex;gap:7px;overflow-x:auto;padding:2px 3px 9px;
+ scrollbar-width:thin;-webkit-overflow-scrolling:touch;
+ scroll-snap-type:x proximity
+}
+.forecast-tab{
+ flex:0 0 auto;min-width:126px;border:1px solid var(--line);border-radius:12px;
+ background:#f8faf9;color:var(--ink-soft);padding:7px 9px;font:inherit;
+ cursor:pointer;white-space:nowrap;text-align:left;scroll-snap-align:start
+}
+.forecast-tab-top{display:block;font-size:10px;line-height:1.25;color:#3a4753}
+.forecast-tab-top strong{font-size:10px}
+.forecast-tab-top small{font-size:8px;color:var(--ink-soft);font-weight:700}
+.forecast-tab-bottom{display:block;margin-top:4px;font-size:9px;font-weight:700}
+.forecast-tab.active{background:#fff;color:#3a4753;border-color:#aebbc4;box-shadow:0 2px 7px rgba(20,40,60,.10)}
 .forecast-tab:focus-visible{outline:2px solid #86a8bf;outline-offset:2px}
-.forecast-day-summary{margin:0 3px 8px;min-height:18px}
-.forecast-day-summary-main{display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:var(--ink-soft);font-size:9px}
-.forecast-day-temp{color:#3a4753}
-.forecast-day-summary strong{font-size:11px}
-.forecast-empty{grid-column:1/-1;padding:14px 8px;text-align:center;color:var(--ink-soft);font-size:10px}
-.forecast-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.forecast-item{min-width:0;background:#f8faf9;border:1px solid var(--line);border-radius:11px;padding:8px 5px;text-align:center}
-.forecast-hour{font-size:10px;font-weight:750;color:var(--ink-soft)}
-.forecast-sky{font-size:21px;line-height:1.2;margin:4px 0 2px}
-.forecast-temp{display:block;font-size:17px;line-height:1.15}
-.forecast-rain,.forecast-wind,.forecast-prob,.forecast-gust{font-size:8px;line-height:1.25;color:var(--ink-soft);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.forecast-day-summary{display:none}
+.forecast-empty{padding:14px 8px;text-align:center;color:var(--ink-soft);font-size:10px}
+
+/* Card triorarie: circa tre visibili alla volta e scorrimento orizzontale */
+.forecast-grid{
+ display:flex;gap:9px;overflow-x:auto;padding:2px 2px 10px;
+ scrollbar-width:thin;-webkit-overflow-scrolling:touch;
+ scroll-snap-type:x mandatory
+}
+.forecast-item{
+ flex:0 0 calc((100% - 27px)/4);min-width:104px;box-sizing:border-box;
+ background:#f8faf9;border:1px solid var(--line);border-radius:13px;
+ padding:13px 8px;text-align:center;scroll-snap-align:start;cursor:pointer;
+ transition:box-shadow .15s,transform .15s
+}
+.forecast-item:hover,.forecast-item:focus-visible{
+ box-shadow:0 4px 14px rgba(20,40,60,.12);transform:translateY(-1px);outline:none
+}
+.forecast-hour{font-size:14px;font-weight:800;color:#3a4753}
+.forecast-sky{font-size:30px;line-height:1.15;margin:7px 0 3px}
+.forecast-condition{
+ display:inline-block;vertical-align:middle;margin-left:2px;padding:2px 4px;
+ border-radius:5px;background:var(--chip-bg);font-size:8px;font-weight:800;
+ color:var(--ink-soft)
+}
+.forecast-temp{display:block;font-size:26px;line-height:1.15;margin-bottom:7px}
+.forecast-rain{font-size:12px;line-height:1.4;color:#3a4753;margin-top:6px;white-space:nowrap;font-weight:800}
+.forecast-more{margin-top:8px;font-size:8px;color:var(--ink-soft);opacity:.75}
 .forecast-attribution{margin:8px 3px 0;font-size:8px;color:var(--ink-soft);text-align:center}
-@media(max-width:380px){.forecast-grid{gap:5px}.forecast-item{padding:7px 3px}.forecast-temp{font-size:16px}.forecast-rain,.forecast-wind,.forecast-prob,.forecast-gust{font-size:7px}}
+
+/* Dettaglio della fascia aperto al tap */
+.forecast-modal-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
+.forecast-modal-time{font-size:13px;font-weight:800;color:#3a4753}
+.forecast-modal-sky{font-size:34px;margin-top:5px}
+.forecast-modal-temp{font-size:38px;font-weight:800}
+.forecast-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.forecast-modal-grid>div{background:#f8faf9;border:1px solid var(--line);border-radius:11px;padding:10px}
+.forecast-modal-grid span{display:block;font-size:9px;color:var(--ink-soft);margin-bottom:4px}
+.forecast-modal-grid strong{font-size:13px;color:#3a4753}
+
+@media(max-width:480px){
+ .forecast-item{flex-basis:calc((100% - 18px)/3);min-width:100px}
+ .forecast-tab{min-width:122px}
+}
+@media(max-width:340px){
+ .forecast-item{flex-basis:calc((100% - 18px)/3);min-width:96px}
+ .forecast-modal-grid{grid-template-columns:1fr}
+}
 
 /* --- Trip section --- */
 .trip-section{margin-top:9px}

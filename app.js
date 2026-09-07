@@ -54,8 +54,12 @@ function age(v){
 }
 function dir(v){
  if(v===null||v===undefined||v==="")return "—";
- if(typeof v==="string"&&Number.isNaN(Number(v)))return v;
- const ds=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+ if(typeof v==="string"&&Number.isNaN(Number(v))){
+  const s=String(v).trim().toUpperCase();
+  const map={W:"O",SW:"SO",WSW:"OSO",WNW:"ONO",NW:"NO",SSW:"SSO",NNW:"NNO"};
+  return map[s]||s;
+ }
+ const ds=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
  return ds[Math.round(Number(v)/22.5)%16];
 }
 // NOTA: nessuna delle 3 stazioni fornisce oggi un proprio orario di
@@ -350,14 +354,45 @@ const FORECAST_TIMEOUT=9000;
 let forecastDays=[];
 let selectedForecastDate=null;
 
+function forecastCondition(value){
+ const raw=String(value??"").trim();
+ const s=raw.toLowerCase();
+
+ // Codici sky_condition osservati nel feed meteo.report di San Giovanni di Fassa.
+ // Li raggruppiamo in categorie semplici e leggibili.
+ const code=raw.toUpperCase();
+ const byCode={
+  A:"Sereno",
+  S:"Sereno",
+  B:"Poco nuvoloso",
+  C:"Nuvoloso",
+  F:"Rovesci",
+  H:"Pioggia",
+  J:"Pioggia",
+  U:"Instabile",
+  V:"Temporali"
+ };
+ if(byCode[code])return byCode[code];
+
+ // Fallback per eventuali descrizioni testuali future.
+ if(s.includes("tempor")||s.includes("thunder")||s.includes("storm")||s.includes("fulmin"))return "Temporali";
+ if(s.includes("neve")||s.includes("snow"))return "Neve";
+ if(s.includes("piogg")||s.includes("rain"))return "Pioggia";
+ if(s.includes("rovesc")||s.includes("shower"))return "Rovesci";
+ if(s.includes("coperto")||s.includes("overcast"))return "Nuvoloso";
+ if(s.includes("nuvol")||s.includes("cloud")||s.includes("parzial")||s.includes("partly"))return "Poco nuvoloso";
+ if(s.includes("sereno")||s.includes("sunny")||s.includes("clear"))return "Sereno";
+ return "Variabile";
+}
 function forecastSkyIcon(value){
- const s=String(value??"").toLowerCase();
- if(s.includes("tempor")||s.includes("thunder")||s.includes("storm")||s.includes("fulmin"))return "⛈️";
- if(s.includes("neve")||s.includes("snow"))return "🌨️";
- if(s.includes("piogg")||s.includes("rain")||s.includes("rovesc")||s.includes("shower"))return "🌦️";
- if(s.includes("coperto")||s.includes("overcast"))return "☁️";
- if(s.includes("nuvol")||s.includes("cloud")||s.includes("parzial")||s.includes("partly"))return "⛅";
- if(s.includes("sereno")||s.includes("sunny")||s.includes("clear"))return "☀️";
+ const c=forecastCondition(value);
+ if(c==="Temporali")return "⛈️";
+ if(c==="Neve")return "🌨️";
+ if(c==="Pioggia")return "🌧️";
+ if(c==="Rovesci"||c==="Instabile")return "🌦️";
+ if(c==="Nuvoloso")return "☁️";
+ if(c==="Poco nuvoloso")return "⛅";
+ if(c==="Sereno")return "☀️";
  return "🌤️";
 }
 function forecastDir(v){return v===null||v===undefined?"—":dir(v);}
@@ -366,17 +401,44 @@ function forecastCardHtml(item){
  const rain=item.rain;
  const prob=item.prob;
  const gust=item.gust;
- return `<article class="forecast-item">
+ const payload=encodeURIComponent(JSON.stringify(item));
+ return `<article class="forecast-item" role="button" tabindex="0"
+   onclick="openForecastModal(decodeURIComponent('${payload}'))"
+   onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openForecastModal(decodeURIComponent('${payload}'))}">
   <div class="forecast-hour">${item.hour}</div>
-  <div class="forecast-sky" title="${sky||""}">${forecastSkyIcon(sky)}</div>
+  <div class="forecast-sky" title="${forecastCondition(sky)}">
+    ${forecastSkyIcon(sky)}
+    ${sky?`<span class="forecast-condition">${forecastCondition(sky)}</span>`:""}
+  </div>
   <strong class="forecast-temp">${num(item.temp)}°</strong>
-  <div class="forecast-rain">☔ ${rain===null?"—":num(rain)} mm</div>
-  <div class="forecast-wind">💨 ${item.wind===null?"—":num(item.wind)} km/h ${forecastDir(item.windDir)}</div>
-  ${prob!==null?`<div class="forecast-prob">${num(prob,0)}% pioggia</div>`:""}
-  ${gust!==null?`<div class="forecast-gust">raffiche ${num(gust)} km/h</div>`:""}
+  <div class="forecast-rain">☔ ${prob===null?"—":num(prob,0)}% · ${rain===null?"—":num(rain)} mm</div>
+  <div class="forecast-more">Tocca per i dettagli</div>
  </article>`;
 }
 
+function openForecastModal(encodedItem){
+ const item=typeof encodedItem==="string"?JSON.parse(encodedItem):encodedItem;
+ const sky=item.sky;
+ openModal(`
+  <div class="forecast-modal">
+   <div class="forecast-modal-head">
+    <div>
+     <div class="forecast-modal-time">Previsione delle ${item.hour}</div>
+     <div class="forecast-modal-sky">${forecastSkyIcon(sky)} ${sky?`<span class="forecast-condition">${forecastCondition(sky)}</span>`:""}</div>
+    </div>
+    <div class="forecast-modal-temp">${num(item.temp)}°</div>
+   </div>
+   <div class="forecast-modal-grid">
+    <div><span>Probabilità pioggia</span><strong>${item.prob===null?"—":num(item.prob,0)+"%"}</strong></div>
+    <div><span>Precipitazioni</span><strong>${item.rain===null?"—":num(item.rain)+" mm"}</strong></div>
+    <div><span>Vento</span><strong>${item.wind===null?"—":num(item.wind)+" km/h"}</strong></div>
+    <div><span>Raffiche</span><strong>${item.gust===null?"—":num(item.gust)+" km/h"}</strong></div>
+    <div><span>Direzione</span><strong>${forecastDir(item.windDir)}${item.windDir===null?"":" · "+num(item.windDir,0)+"°"}</strong></div>
+    <div><span>Condizioni</span><strong>${forecastCondition(sky)}</strong></div>
+   </div>
+  </div>
+ `);
+}
 function forecastTodayIso(){
  const parts=new Intl.DateTimeFormat("en-CA",{
   timeZone:"Europe/Rome",year:"numeric",month:"2-digit",day:"2-digit"
@@ -410,22 +472,19 @@ function forecastHoursForDay(day){
   return hh*60+mm+180>now;
  });
 }
-function forecastDaySummaryHtml(day){
- const rain=day.rain===null||day.rain===undefined?"—":num(day.rain);
- const prob=day.rainProb===null||day.rainProb===undefined?"—":num(day.rainProb,0);
- const wind=day.wind===null||day.wind===undefined?"—":num(day.wind);
- const gust=day.gust===null||day.gust===undefined?"—":num(day.gust);
- return `<div class="forecast-day-summary-main">
-  <span class="forecast-day-temp">🌡️ <strong>${num(day.min,0)}° / ${num(day.max,0)}°</strong></span>
-  <span>☔ ${prob}% · ${rain} mm</span>
-  <span>💨 ${wind} km/h</span>
-  <span>🌬️ ${gust} km/h</span>
- </div>`;
-}
+function forecastDaySummaryHtml(day){ return ""; }
+
 function renderForecastTabs(){
  const tabs=document.getElementById("forecast-tabs");
  if(!tabs)return;
- tabs.innerHTML=forecastDays.map(day=>`<button type="button" class="forecast-tab" data-date="${day.date}" role="tab" aria-selected="false">${forecastTabLabel(day.date)}</button>`).join("");
+ tabs.innerHTML=forecastDays.map(day=>{
+  const prob=day.rainProb===null||day.rainProb===undefined?"—":num(day.rainProb,0)+"%";
+  const code=day.code??"";
+  return `<button type="button" class="forecast-tab" data-date="${day.date}" role="tab" aria-selected="false">
+   <span class="forecast-tab-top">${forecastSkyIcon(code)} <strong>${forecastTabLabel(day.date)}</strong>${code?` <small>${forecastCondition(code)}</small>`:""}</span>
+   <span class="forecast-tab-bottom">${num(day.min,0)}° / ${num(day.max,0)}° · ☔ ${prob}</span>
+  </button>`;
+ }).join("");
  tabs.querySelectorAll(".forecast-tab").forEach(btn=>btn.addEventListener("click",()=>renderForecastDay(btn.dataset.date)));
 }
 function renderForecastDay(dateIso){
