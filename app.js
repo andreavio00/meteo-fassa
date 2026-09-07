@@ -342,18 +342,14 @@ function tripModalHtml(s){
 }
 
 // --- Previsioni locali meteo.report: dati triorari ------------------------
-// Il Forecast di meteo.report usa direttamente il JSON pubblico della
-// località. Il gruppo "180" contiene le previsioni a intervalli di 3 ore.
-const METEO_REPORT_FORECAST_URL="https://meteofassa-forecast-proxy.andrea-vio.workers.dev/";
+// Il worker dedicato normalizza gia' il feed meteo.report in giornate
+// complete (days[]) con riepilogo giornaliero e fasce di 3 ore.
+const METEO_REPORT_FORECAST_URL="https://meteopozza-previsioni.andrea-vio.workers.dev/";
 const FORECAST_TIMEOUT=9000;
 
-function forecastValue(o, keys){
- for(const k of keys){
-  const v=o?.[k];
-  if(v!==undefined&&v!==null&&v!=="")return v;
- }
- return null;
-}
+let forecastDays=[];
+let selectedForecastDate=null;
+
 function forecastSkyIcon(value){
  const s=String(value??"").toLowerCase();
  if(s.includes("tempor")||s.includes("thunder")||s.includes("storm")||s.includes("fulmin"))return "⛈️";
@@ -364,7 +360,7 @@ function forecastSkyIcon(value){
  if(s.includes("sereno")||s.includes("sunny")||s.includes("clear"))return "☀️";
  return "🌤️";
 }
-function forecastDir(v){return v===null?"—":dir(v);}
+function forecastDir(v){return v===null||v===undefined?"—":dir(v);}
 function forecastCardHtml(item){
  const sky=item.sky;
  const rain=item.rain;
@@ -380,52 +376,112 @@ function forecastCardHtml(item){
   ${gust!==null?`<div class="forecast-gust">raffiche ${num(gust)} km/h</div>`:""}
  </article>`;
 }
+
+function forecastTodayIso(){
+ const parts=new Intl.DateTimeFormat("en-CA",{
+  timeZone:"Europe/Rome",year:"numeric",month:"2-digit",day:"2-digit"
+ }).formatToParts(new Date());
+ const get=t=>parts.find(p=>p.type===t)?.value;
+ return `${get("year")}-${get("month")}-${get("day")}`;
+}
+function forecastNowMinutes(){
+ const parts=new Intl.DateTimeFormat("en-GB",{
+  timeZone:"Europe/Rome",hour:"2-digit",minute:"2-digit",hour12:false
+ }).formatToParts(new Date());
+ const h=Number(parts.find(p=>p.type==="hour")?.value||0);
+ const m=Number(parts.find(p=>p.type==="minute")?.value||0);
+ return h*60+m;
+}
+function forecastTabLabel(dateIso){
+ const [y,m,d]=dateIso.split("-").map(Number);
+ const date=new Date(Date.UTC(y,m-1,d,12));
+ const today=forecastTodayIso();
+ const weekday=new Intl.DateTimeFormat("it-IT",{weekday:"short",timeZone:"Europe/Rome"})
+  .format(date).replace(".","").toUpperCase();
+ return dateIso===today?`OGGI ${d}`:`${weekday} ${d}`;
+}
+function forecastHoursForDay(day){
+ const hours=Array.isArray(day.hours)?day.hours:[];
+ if(day.date!==forecastTodayIso())return hours;
+ const now=forecastNowMinutes();
+ // La fascia delle 17:00, per esempio, resta visibile fino alle 20:00.
+ return hours.filter(h=>{
+  const [hh,mm]=String(h.time||"00:00").split(":").map(Number);
+  return hh*60+mm+180>now;
+ });
+}
+function forecastDaySummaryHtml(day){
+ const rain=day.rain===null||day.rain===undefined?"—":num(day.rain);
+ const prob=day.rainProb===null||day.rainProb===undefined?"—":num(day.rainProb,0);
+ const wind=day.wind===null||day.wind===undefined?"—":num(day.wind);
+ const gust=day.gust===null||day.gust===undefined?"—":num(day.gust);
+ return `<div class="forecast-day-summary-main">
+  <span class="forecast-day-temp">🌡️ <strong>${num(day.min,0)}° / ${num(day.max,0)}°</strong></span>
+  <span>☔ ${prob}% · ${rain} mm</span>
+  <span>💨 ${wind} km/h</span>
+  <span>🌬️ ${gust} km/h</span>
+ </div>`;
+}
+function renderForecastTabs(){
+ const tabs=document.getElementById("forecast-tabs");
+ if(!tabs)return;
+ tabs.innerHTML=forecastDays.map(day=>`<button type="button" class="forecast-tab" data-date="${day.date}" role="tab" aria-selected="false">${forecastTabLabel(day.date)}</button>`).join("");
+ tabs.querySelectorAll(".forecast-tab").forEach(btn=>btn.addEventListener("click",()=>renderForecastDay(btn.dataset.date)));
+}
+function renderForecastDay(dateIso){
+ const grid=document.getElementById("forecast-grid");
+ const summary=document.getElementById("forecast-day-summary");
+ const day=forecastDays.find(d=>d.date===dateIso)||forecastDays[0];
+ if(!day||!grid)return;
+ selectedForecastDate=day.date;
+ document.querySelectorAll("#forecast-tabs .forecast-tab").forEach(btn=>{
+  const active=btn.dataset.date===day.date;
+  btn.classList.toggle("active",active);
+  btn.setAttribute("aria-selected",active?"true":"false");
+ });
+ if(summary)summary.innerHTML=forecastDaySummaryHtml(day);
+ const hours=forecastHoursForDay(day);
+ if(!hours.length){
+  grid.innerHTML=`<div class="forecast-empty">Nessuna fascia futura disponibile per oggi.</div>`;
+  return;
+ }
+ const cards=hours.map(h=>({
+  hour:h.time||"—",
+  temp:numOrNull(h.temp),
+  rain:numOrNull(h.rain),
+  prob:numOrNull(h.rainProb),
+  wind:numOrNull(h.wind),
+  gust:numOrNull(h.gust),
+  windDir:numOrNull(h.dir),
+  sky:h.code??null
+ }));
+ grid.innerHTML=cards.map(forecastCardHtml).join("");
+}
 async function loadForecast(){
  const grid=document.getElementById("forecast-grid"),status=document.getElementById("forecast-status");
+ const tabs=document.getElementById("forecast-tabs"),summary=document.getElementById("forecast-day-summary");
  status.textContent="Aggiornamento previsioni…"; status.className="worker-status";
  try{
   const res=await fetchWithTimeout(`${METEO_REPORT_FORECAST_URL}?_=${Date.now()}`,FORECAST_TIMEOUT);
   if(!res.ok)throw Error(`HTTP ${res.status}`);
   const raw=await res.json();
-  if(!raw["180"]||typeof raw["180"]!=="object")throw Error("Formato previsioni inatteso");
-  const base=dateOf(raw.start);
-  if(!base)throw Error("Ora di inizio non disponibile");
+  if(!Array.isArray(raw.days)||!raw.days.length)throw Error("Formato previsioni inatteso");
 
-  // Il formato ufficiale di meteo.report usa le chiavi dei time-layout
-  // come indice e cinque variabili principali: temperature, rain_fall,
-  // sky_condition, wind_direction e wind_speed.
-  const rows=Object.entries(raw["180"])
-    .map(([layout,o])=>({layout,o}))
-    .sort((a,b)=>Number(a.layout)-Number(b.layout));
+  forecastDays=raw.days;
+  renderForecastTabs();
+  const today=forecastTodayIso();
+  const initial=forecastDays.find(d=>d.date===today)||forecastDays[0];
+  renderForecastDay(initial.date);
 
-  const all=rows.map((row,i)=>{
-    const d=new Date(base.getTime()+i*3*60*60*1000);
-    const o=row.o||{};
-    return {
-      date:d,
-      hour:time(d),
-      temp:numOrNull(o.temperature),
-      rain:numOrNull(o.rain_fall),
-      wind:numOrNull(o.wind_speed),
-      windDir:numOrNull(o.wind_direction),
-      sky:o.sky_condition ?? null
-    };
-  });
-
-  // Prendiamo le fasce che comprendono le prossime ~24 ore.
-  // Se il feed parte già nel passato, non perdiamo dati: usiamo le 8
-  // fasce più vicine all'ora corrente.
-  const now=Date.now();
-  let future=all.filter(x=>x.date.getTime()+90*60*1000>=now);
-  if(!future.length)future=all.slice(-8);
-  const cards=future.slice(0,8);
-
-  grid.innerHTML=cards.map(forecastCardHtml).join("");
-  const stamp=raw.start?time(raw.start):"—";
-  status.textContent=`Previsioni aggiornate · ${stamp}`; status.className="worker-status ok";
+  const count=raw.days_count??forecastDays.length;
+  status.textContent=`Previsioni aggiornate · ${count} giorni disponibili`;
+  status.className="worker-status ok";
  }catch(e){
   console.error(e);
+  forecastDays=[]; selectedForecastDate=null;
   status.textContent="⚠️ Previsioni non disponibili al momento"; status.className="worker-status error";
+  if(tabs)tabs.innerHTML="";
+  if(summary)summary.innerHTML="";
   grid.innerHTML="";
  }
 }

@@ -97,6 +97,15 @@ h1{margin:0 0 7px;font-size:clamp(24px,5vw,31px);font-weight:800;letter-spacing:
 .forecast-heading small{font-size:10px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .forecast-content{padding:0 9px 10px;border-top:1px solid var(--line)}
 .forecast-content .worker-status{margin:9px 4px}
+.forecast-tabs{display:flex;gap:6px;overflow-x:auto;padding:1px 3px 8px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.forecast-tab{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:#f8faf9;color:var(--ink-soft);padding:6px 9px;font:inherit;font-size:9px;font-weight:750;cursor:pointer;white-space:nowrap}
+.forecast-tab.active{background:#fff;color:#3a4753;border-color:#aebbc4;box-shadow:0 2px 6px rgba(20,40,60,.08)}
+.forecast-tab:focus-visible{outline:2px solid #86a8bf;outline-offset:2px}
+.forecast-day-summary{margin:0 3px 8px;min-height:18px}
+.forecast-day-summary-main{display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:var(--ink-soft);font-size:9px}
+.forecast-day-temp{color:#3a4753}
+.forecast-day-summary strong{font-size:11px}
+.forecast-empty{grid-column:1/-1;padding:14px 8px;text-align:center;color:var(--ink-soft);font-size:10px}
 .forecast-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .forecast-item{min-width:0;background:#f8faf9;border:1px solid var(--line);border-radius:11px;padding:8px 5px;text-align:center}
 .forecast-hour{font-size:10px;font-weight:750;color:var(--ink-soft)}
