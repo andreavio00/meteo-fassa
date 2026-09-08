@@ -151,10 +151,36 @@
   box-shadow:0 5px 14px rgba(160,105,20,.18);
 }
 
-/* Le card triorarie restano compatte come nella versione precedente. */
-.forecast-item{flex:0 0 calc((100% - 27px)/4);min-width:104px;padding:13px 8px}
+/* Le card triorarie restano compatte e tutte della stessa altezza. */
+.forecast-item{
+  flex:0 0 calc((100% - 27px)/4);
+  min-width:104px;
+  padding:13px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
 .forecast-hour{font-size:14px}
 .forecast-temp{font-size:26px}
+.forecast-sky{
+  width:100%;
+  min-height:58px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+}
+.forecast-condition{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:22px;
+  line-height:1.1;
+  white-space:normal;
+  text-align:center;
+}
+.forecast-rain{margin-top:auto}
 .forecast-item.forecast-thunder{
   border-color:#d19a37;
   background:linear-gradient(180deg,#fffaf0,#fff6df);
