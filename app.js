@@ -516,10 +516,29 @@ function renderForecastDay(dateIso){
  }));
  grid.innerHTML=cards.map(forecastCardHtml).join("");
 }
+function renderForecastPreview(){
+ const preview=document.getElementById("forecast-preview");
+ if(!preview||!forecastDays.length)return;
+ let chosenDay=null,chosenHour=null;
+ for(const day of forecastDays){
+  const hours=forecastHoursForDay(day);
+  if(hours.length){chosenDay=day;chosenHour=hours[0];break;}
+ }
+ if(!chosenDay||!chosenHour){
+  preview.textContent="Nessuna fascia disponibile";
+  return;
+ }
+ const when=chosenDay.date===forecastTodayIso()?"Oggi":forecastTabLabel(chosenDay.date);
+ const temp=chosenHour.temp===null||chosenHour.temp===undefined?"—":`${num(chosenHour.temp)}°`;
+ const prob=chosenHour.rainProb===null||chosenHour.rainProb===undefined?"—":`${num(chosenHour.rainProb,0)}%`;
+ preview.innerHTML=`<span class="forecast-preview-line"><strong>${when} ${chosenHour.time}</strong><span>${forecastSkyIcon(chosenHour.code)} ${forecastCondition(chosenHour.code)}</span><span>${temp}</span><span>☔ ${prob}</span></span>`;
+}
+
 async function loadForecast(){
  const grid=document.getElementById("forecast-grid"),status=document.getElementById("forecast-status");
  const tabs=document.getElementById("forecast-tabs"),summary=document.getElementById("forecast-day-summary");
- status.textContent="Aggiornamento previsioni…"; status.className="worker-status";
+ const preview=document.getElementById("forecast-preview");
+ if(status){status.hidden=true;status.textContent="";}
  try{
   const res=await fetchWithTimeout(`${METEO_REPORT_FORECAST_URL}?_=${Date.now()}`,FORECAST_TIMEOUT);
   if(!res.ok)throw Error(`HTTP ${res.status}`);
@@ -527,31 +546,29 @@ async function loadForecast(){
   if(!Array.isArray(raw.days)||!raw.days.length)throw Error("Formato previsioni inatteso");
 
   forecastDays=raw.days;
+  renderForecastPreview();
   renderForecastTabs();
   const today=forecastTodayIso();
   const initial=forecastDays.find(d=>d.date===today)||forecastDays[0];
   renderForecastDay(initial.date);
-
-  const count=raw.days_count??forecastDays.length;
-  status.textContent=`Previsioni aggiornate · ${count} giorni disponibili`;
-  status.className="worker-status ok";
  }catch(e){
   console.error(e);
   forecastDays=[]; selectedForecastDate=null;
-  status.textContent="⚠️ Previsioni non disponibili al momento"; status.className="worker-status error";
+  if(preview)preview.textContent="Previsioni momentaneamente non disponibili";
+  if(status){status.hidden=false;status.textContent="⚠️ Previsioni non disponibili al momento";status.className="worker-status error";}
   if(tabs)tabs.innerHTML="";
   if(summary)summary.innerHTML="";
-  grid.innerHTML="";
+  if(grid)grid.innerHTML="";
  }
 }
+
 function initForecastSection(){
  const details=document.getElementById("forecast-details");
- let loaded=false;
- details.addEventListener("toggle",()=>{
-  if(!details.open)return;
-  if(!loaded){loaded=true;loadForecast();}
- });
+ if(!details)return;
+ // Carichiamo subito: la testata chiusa mostra già la prossima fascia disponibile.
+ loadForecast();
 }
+
 initForecastSection();
 
 let tripStationsCache=null;

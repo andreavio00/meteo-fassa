@@ -25,18 +25,18 @@
 
 <section class="forecast-section">
 <details id="forecast-details" class="forecast-details">
-<summary>
+<summary class="forecast-summary">
 <span class="forecast-summary-main">
-<span class="forecast-icon">⏱️</span>
+<span class="forecast-icon" aria-hidden="true">🌦️</span>
 <span class="forecast-heading">
 <strong>Previsioni</strong>
-<small>Previsioni triorarie per San Giovanni di Fassa</small>
+<small id="forecast-preview">Caricamento della prossima fascia…</small>
 </span>
 </span>
 <span class="summary-arrow">▼</span>
 </summary>
 <div class="forecast-content">
-<div id="forecast-status" class="worker-status">Tocca per caricare le previsioni…</div>
+<div id="forecast-status" class="worker-status" hidden></div>
 <div id="forecast-tabs" class="forecast-tabs" role="tablist" aria-label="Giorni di previsione"></div>
 <div id="forecast-day-summary" class="forecast-day-summary"></div>
 <div id="forecast-grid" class="forecast-grid"></div>
