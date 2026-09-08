@@ -17,7 +17,8 @@
   min-width:0;
   flex:1;
 }
-.forecast-icon{display:none}
+/* Rimuove l'icona meteo generica originaria in alto a sinistra. */
+.forecast-icon{display:none!important}
 .forecast-heading{
   display:flex;
   flex-direction:column;
@@ -78,9 +79,11 @@
   justify-self:center;
   min-width:0;
   max-width:100%;
-  font-size:12px;
+  font-size:15px;
   line-height:1.15;
-  font-weight:800;
+  font-weight:900;
+  letter-spacing:.035em;
+  text-transform:uppercase;
   color:var(--ink);
   text-align:center;
   white-space:nowrap;
@@ -164,7 +167,7 @@
   .forecast-preview{grid-template-columns:64px minmax(0,1fr) 64px;column-gap:8px}
   .forecast-preview-icon{font-size:38px}
   .forecast-preview-time{font-size:13px}
-  .forecast-preview-condition{font-size:11px}
+  .forecast-preview-condition{font-size:14px}
   .forecast-preview-temp{font-size:28px}
   .forecast-preview-rain{font-size:11px}
 }
@@ -179,4 +182,5 @@
   .forecast-preview{grid-template-columns:58px minmax(0,1fr) 58px;column-gap:6px}
   .forecast-preview-icon{font-size:35px}
   .forecast-preview-temp{font-size:26px}
+  .forecast-preview-condition{font-size:13px}
 }
