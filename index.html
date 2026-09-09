@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#4a6670">
 <title>Meteo Val di Fassa</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="stations-ui.css">
 <link rel="stylesheet" href="forecast-ui.css">
 </head>
 <body>
@@ -16,8 +17,11 @@
 <div id="worker-status" class="worker-status">Aggiornamento dati…</div>
 </header>
 
-<section aria-label="Stazione di riferimento">
+<section aria-label="Stazioni di riferimento">
+<div class="reference-grid">
 <div id="hero-station"></div>
+<div id="pozza-amateur"></div>
+</div>
 </section>
 
 <section aria-label="Stazioni di confronto">
@@ -74,6 +78,7 @@
 </div>
 </div>
 
+<script src="stations-ui.js"></script>
 <script src="app.js"></script>
 <script src="forecast-ui.js"></script>
 </body>
