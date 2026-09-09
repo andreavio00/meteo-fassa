@@ -6,16 +6,18 @@
   margin-bottom:9px;
 }
 .reference-grid .hero-card{margin-bottom:0;height:100%}
-#pozza-amateur{min-width:0}
+#pozza-amateur{
+  min-width:0;
+  align-self:center;
+}
 .pozza-amateur-card{
-  height:100%;
-  padding:10px;
+  padding:9px 10px;
   border:1.5px solid #b85a4c;
   box-shadow:0 2px 10px rgba(120,55,45,.08);
   background:#fffdfc;
   display:flex;
   flex-direction:column;
-  gap:7px;
+  gap:6px;
 }
 .pozza-amateur-title{
   display:flex;
@@ -40,7 +42,7 @@
   display:flex;
   flex-direction:column;
   gap:2px;
-  margin-top:2px;
+  margin-top:1px;
 }
 .pozza-amateur-values strong{
   font-size:25px;
@@ -53,8 +55,8 @@
   color:var(--ink-soft);
 }
 .pozza-amateur-note{
-  margin-top:auto;
-  padding-top:6px;
+  margin-top:2px;
+  padding-top:5px;
   border-top:1px solid #efd7d2;
   color:#8a3f34;
   font-size:9px;
@@ -79,13 +81,14 @@
 }
 @media(max-width:380px){
   .reference-grid{grid-template-columns:minmax(0,1.55fr) minmax(132px,.8fr);gap:6px}
-  .pozza-amateur-card{padding:9px 8px}
+  .pozza-amateur-card{padding:8px}
   .pozza-amateur-title{font-size:12px}
   .pozza-amateur-values strong{font-size:22px}
   .pozza-amateur-values span{font-size:14px}
 }
 @media(max-width:340px){
   .reference-grid{grid-template-columns:1fr}
+  #pozza-amateur{align-self:stretch}
   .pozza-amateur-card{min-height:0}
   .pozza-amateur-values{flex-direction:row;align-items:baseline;gap:14px}
   .pozza-amateur-note{margin-top:2px}
