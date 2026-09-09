@@ -1,4 +1,4 @@
-const WORKER_URL="https://meteofassa-proxy.andrea-vio.workers.dev/";
+const WORKER_URL="https://meteopozza-stazioni.andrea-vio.workers.dev/";
 const WORKER_TIMEOUT=7000;
 const DATA_AGE_WARNING=30;
 const DATA_AGE_OLD=60;
