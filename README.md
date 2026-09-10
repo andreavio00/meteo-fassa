@@ -202,19 +202,24 @@ In sintesi:
 
 ## 6. Meteo per le escursioni
 
-Nel frontend esiste già una sezione **“Meteo per una gita”** e `app.js` punta attualmente al Worker:
+La home contiene una sintesi per zona e rimanda alla pagina completa `escursioni.html`.
+Osservazioni e previsioni restano distinte e arrivano esclusivamente dai due
+Aggregator normalizzati:
 
-`https://gitemeteofassa.andrea-vio.workers.dev/`
+- stazioni osservate: `https://gite-meteo-aggregator.andrea-vio.workers.dev/`
+- previsioni: `https://gite-previsioni-aggregator.andrea-vio.workers.dev/`
 
-Questa parte è però ancora **da consolidare**.
+Le quattro zone sono Catinaccio, Sella e Sassolungo, Marmolada e Val San
+Nicolò, Moena e Latemar. La configurazione condivisa si trova in
+`trip-config.js`: usa la `key` univoca delle 19 stazioni e collega ogni zona al
+relativo endpoint previsionale `/zone/...`. Una stazione può appartenere a più
+zone.
 
-L'obiettivo è avere anche per le escursioni una struttura chiara analoga a Pozza Live:
-
-- un file/endpoint unico per i dati attuali delle stazioni
-- un file/endpoint unico per le previsioni delle località di interesse
-- frontend che usa questi dati senza interrogare direttamente molte sorgenti diverse
-
-Le stazioni e le località di montagna raccolte finora saranno quindi riordinate in una fase successiva.
+La home mostra al massimo tre stazioni e tre punti previsionali della zona
+selezionata. La pagina completa mostra tutte le stazioni associate e le fasce
+diurne dei primi tre giorni disponibili. Il frontend preserva i valori `null`,
+distingue pioggia istantanea e accumulo e segnala i dati osservati più vecchi
+di 60 minuti quando è disponibile il timestamp della misura.
 
 ---
 
