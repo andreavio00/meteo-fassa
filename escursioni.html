@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#4a6670">
+<title>Meteo escursioni — Val di Fassa</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="escursioni.css">
+</head>
+<body>
+<main class="hike-page">
+ <header class="hike-header">
+  <a href="index.html" class="back-link">← Pozza live</a>
+  <div class="eyebrow">🥾 Meteo in quota</div>
+  <h1>Le escursioni</h1>
+  <p>Confronta ciò che sta accadendo nelle stazioni con le previsioni delle prossime ore.</p>
+ </header>
+ <nav id="hike-zones" class="hike-zones" aria-label="Zone escursioni"></nav>
+ <div id="hike-status" class="worker-status">Aggiornamento dati…</div>
+ <section aria-labelledby="observed-title">
+  <div class="section-title"><div><span>ADESSO</span><h2 id="observed-title">Condizioni osservate</h2></div><small>Dati misurati dalle stazioni</small></div>
+  <div id="observed-grid" class="observed-grid"></div>
+ </section>
+ <section aria-labelledby="forecast-title">
+  <div class="section-title"><div><span>PROSSIME ORE</span><h2 id="forecast-title">Previsioni</h2></div><small>Fasce di tre ore</small></div>
+  <div id="day-tabs" class="day-tabs" role="tablist" aria-label="Giorni di previsione"></div>
+  <div id="forecast-locations" class="forecast-locations"></div>
+ </section>
+ <p class="hike-note">Le osservazioni descrivono le condizioni presso le stazioni; le previsioni riguardano punti modello e possono differire localmente.</p>
+</main>
+<dialog id="station-dialog"><button class="dialog-close" aria-label="Chiudi">✕</button><div id="station-dialog-body"></div></dialog>
+<script src="trip-config.js"></script>
+<script src="escursioni.js"></script>
+</body>
+</html>
