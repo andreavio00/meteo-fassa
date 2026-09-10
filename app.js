@@ -14,7 +14,8 @@ const MAIN_STATIONS={
 const COMFORT_MIN=-10, COMFORT_MAX=35;
 
 // --- Meteo per una gita: stazioni in quota (worker separato) --------------
-const TRIP_WORKER_URL="https://gitemeteofassa.andrea-vio.workers.dev/";
+const TRIP_WORKER_URL=window.METEO_FASSA_TRIPS.stationsUrl;
+const TRIP_FORECAST_URL=window.METEO_FASSA_TRIPS.forecastUrl;
 const TRIP_TIMEOUT=9000;
 
 // Icona in base al nome della stazione (nessun elenco fisso per id: così
@@ -27,6 +28,7 @@ function tripIcon(name){
  if(n.includes("sass")||n.includes("cima")||n.includes("piz")||n.includes("pordoi"))return "🏔️";
  return "⛰️";
 }
+function tripAltitude(v){return v===null||v===undefined||v===""?"Quota non disponibile":`${v} m`;}
 
 function fetchWithTimeout(url,ms){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
@@ -289,15 +291,15 @@ function tripCardHtml(s){
  const rainRow=(s.rainToday!==null&&s.rainToday!==undefined)
    ?`<div class="trip-rain">🌧️ ${num(s.rainToday)} mm oggi</div>`:"";
  if(offline){
-  return `<article class="station-card trip-card trip-card-offline" data-trip-id="${s.id}" tabindex="0" role="button" aria-label="${s.name}, dati non disponibili">
+  return `<article class="station-card trip-card trip-card-offline" data-trip-id="${s.key}" tabindex="0" role="button" aria-label="${s.name}, dati non disponibili">
    <div class="card-title">${icon} <strong>${s.name}</strong></div>
-   <div class="quota">${s.altitude} m</div>
+   <div class="quota">${tripAltitude(s.altitude)}</div>
    <p class="error-text">${s.status==="no-data"?"Dati non disponibili":"Stazione offline"}</p>
   </article>`;
  }
- return `<article class="station-card trip-card" data-trip-id="${s.id}" tabindex="0" role="button" aria-label="Dettagli ${s.name}">
+ return `<article class="station-card trip-card" data-trip-id="${s.key}" tabindex="0" role="button" aria-label="Dettagli ${s.name}">
   <div class="card-title">${icon} <strong>${s.name}</strong></div>
-  <div class="quota">${s.altitude} m</div>
+  <div class="quota">${tripAltitude(s.altitude)}</div>
   <div class="temp-humidity-row compact-thr">
    <span class="value-num compact-value">${num(s.temperature)}°</span>
    <span class="value-num value-humidity compact-value">💧${num(s.humidity,0)}%</span>
@@ -313,36 +315,35 @@ function tripDetailRow(icon,label,value){
 function tripModalHtml(s){
  const icon=tripIcon(s.name);
  const wd=s.windDirection?s.windDirection:"—";
- const a=age(s.fetchedAt);
+ const a=age(s.updated);
  if(s.status!=="online"){
   return `<div class="hero-top">
    <span class="card-icon">${icon}</span>
-   <div><div class="station-name">${s.name}</div><div class="quota">${s.altitude} m · ${s.source}</div></div>
+   <div><div class="station-name">${s.name}</div><div class="quota">${tripAltitude(s.altitude)} · ${s.source}</div></div>
   </div>
   <p class="error-text" style="text-align:left;margin-top:14px">${s.status==="no-data"?"La stazione non sta al momento fornendo dati utilizzabili.":"Stazione risultata offline all'ultimo aggiornamento."}</p>`;
  }
  return `<div class="hero-top">
   <span class="card-icon">${icon}</span>
-  <div><div class="station-name">${s.name}</div><div class="quota">${s.altitude} m · ${s.source}</div></div>
+  <div><div class="station-name">${s.name}</div><div class="quota">${tripAltitude(s.altitude)} · ${s.source}</div></div>
  </div>
  <div class="hero-values" style="margin-top:14px">
   <div class="temp-humidity-row">
    <span class="value-num">${num(s.temperature)}°</span>
    <span class="value-num value-humidity">💧${num(s.humidity,0)}%</span>
   </div>
-  ${feltRow(s.perceived)}
+  ${feltRow(s.feelsLike)}
   <div class="metrics">
    ${tripDetailRow("🌡️","Punto di rugiada",`${num(s.dewPoint)}°`)}
    ${tripDetailRow("🥶","Wind chill",s.windChill===null||s.windChill===undefined?"—":`${num(s.windChill)}°`)}
    ${tripDetailRow("💨","Vento",`${num(s.wind)} km/h ${wd}`)}
-   ${tripDetailRow("〰️","Vento medio 10'",`${num(s.wind10)} km/h`)}
-   ${tripDetailRow("🌬️","Raffica",`${num(s.gust)} km/h`)}
+   ${tripDetailRow("🌬️","Raffica",`${num(s.windGust)} km/h`)}
    ${tripDetailRow("⏲️","Pressione",`${num(s.pressure)} hPa`)}
    ${tripDetailRow("🌧️","Pioggia",`${num(s.rainRate)} mm/h`)}
    ${tripDetailRow("☔","Pioggia oggi",`${num(s.rainToday)} mm`)}
   </div>
  </div>
- <div class="data-time ${a.c}" style="margin-top:14px"><span class="age-dot"></span>${s.updatedText?`Stazione: ${s.updatedText}`:`Letto alle ${time(s.fetchedAt)}`}${a.showDelay?` · ${a.label}`:""}</div>`;
+ <div class="data-time ${a.c}" style="margin-top:14px"><span class="age-dot"></span>${s.updated?`Rilevato alle ${time(s.updated)}`:s.updatedText?`Stazione: ${s.updatedText}`:"Ora della misura non disponibile"}${a.showDelay?` · ${a.label}`:""}</div>`;
 }
 
 // --- Previsioni locali meteo.report: dati triorari ------------------------
@@ -585,55 +586,39 @@ function closeModal(){
 }
 function openTripModal(id){
  if(!tripStationsCache)return;
- const s=tripStationsCache.find(x=>x.id===id);
+ const s=tripStationsCache.find(x=>x.key===id);
  if(!s)return;
  openModal(tripModalHtml(s));
 }
 
-const TRIP_ZONE_BY_ID={
- gardeccia:"catinaccio",
- principe:"catinaccio",
- contrin:"catinaccio",
- passosella:"sella",
- pordoi:"sella",
- pizboe:"sella",
- rolle:"moena",
- paradiso:"moena"
-};
-
-// Fonti aggiuntive che non vengono ricostruite dal worker: manteniamo la
-// pagina originale in un pannello interno, senza alterare i dati delle
-// stazioni già gestite dal worker.
-const TRIP_EXTRA_SOURCES={
- marmolada:[
-  {name:"Punta Penia",quota:"3343 m",icon:"🏔️",url:"https://www.marmoladameteo.it/puntapenia/index.php",kind:"iframe",note:"MarmoladaMeteo · dati della stazione"},
-  {name:"Previsioni Aeronautica Militare",quota:"Marmolada / Trentino-Alto Adige",icon:"🛰️",url:"https://www.meteoam.it/it/trentino-alto-adige",kind:"link",note:"Previsioni ufficiali regionali"}
- ],
- sella:[
-  {name:"Col dei Rossi",quota:"2385 m",icon:"🌬️",url:"https://www.dolomitesmeteo.it/coldeirossi/",kind:"iframe",note:"DolomitesMeteo · osservatorio meteorologico"},
-  {name:"Col Rodella",quota:"—",icon:"🏔️",url:"https://icarusfassa.it/stazione-meteo-icarus-flying-team/",kind:"iframe",note:"Icarus Flying Team · pagina della stazione"}
- ],
- moena:[
-  // Le tre stazioni MeteoPredazzo restano volutamente fuori dal worker
-  // finché non disponiamo degli URL/endpoint esatti delle pagine dati.
-  {name:"Torre di Pisa",quota:"—",icon:"🏔️",kind:"pending",note:"MeteoPredazzo · sorgente da collegare"},
-  {name:"Gardonè",quota:"—",icon:"🏔️",kind:"pending",note:"MeteoPredazzo · sorgente da collegare"},
-  {name:"Passo Feudo",quota:"—",icon:"🏔️",kind:"pending",note:"MeteoPredazzo · sorgente da collegare"}
- ]
-};
-
-function tripExtraHtml(item){
- if(item.kind==="pending") return `<article class="trip-extra-card trip-extra-pending"><div class="trip-extra-head"><span>${item.icon}</span><div><strong>${item.name}</strong><small>${item.quota}</small></div></div><p>${item.note}</p></article>`;
- if(item.kind==="link") return `<article class="trip-extra-card"><div class="trip-extra-head"><span>${item.icon}</span><div><strong>${item.name}</strong><small>${item.quota}</small></div></div><p>${item.note}</p><a class="forecast-link" href="${item.url}" target="_blank" rel="noopener noreferrer">Apri fonte ufficiale ↗</a></article>`;
- return `<article class="trip-extra-card"><div class="trip-extra-head"><span>${item.icon}</span><div><strong>${item.name}</strong><small>${item.quota}</small></div></div><p>${item.note}</p><button type="button" class="trip-extra-open" data-src="${item.url}" data-title="${item.name}">Apri dati in pagina</button></article>`;
+let selectedTripZone="catinaccio";
+function zoneConfig(zone){return window.METEO_FASSA_TRIPS.zones[zone]||window.METEO_FASSA_TRIPS.zones.catinaccio;}
+function currentTripPeriod(location){
+ const now=Date.now();
+ return (location.periods_3h||[]).find(p=>new Date(p.end).getTime()>now)||(location.periods_3h||[])[0];
 }
-
+function tripForecastPreviewHtml(location){
+ const p=currentTripPeriod(location); if(!p)return "";
+ const w=p.summary?.weather||{};
+ return `<article class="trip-forecast-card"><div><strong>${location.name}</strong><small>${p.period}</small></div><span class="trip-forecast-weather">${w.icon||"🌦️"} ${w.label_it||"—"}</span><span>${num(p.summary?.temperature_c)}°</span><span>☔ ${num(p.summary?.precipitation_probability_pct,0)}% · ${num(p.summary?.precipitation_mm)} mm</span></article>`;
+}
+async function loadTripForecast(zone){
+ const preview=document.getElementById("trip-forecast-preview"),cfg=zoneConfig(zone);
+ preview.innerHTML='<div class="worker-status">Aggiornamento previsioni…</div>';
+ try{
+  const res=await fetchWithTimeout(`${TRIP_FORECAST_URL}/zone/${cfg.forecastId}` ,TRIP_TIMEOUT);
+  if(!res.ok)throw Error(`HTTP ${res.status}`);
+  const raw=await res.json(),locations=raw.zone?.locations||[];
+  preview.innerHTML=`<h3>Prossime ore</h3>${locations.slice(0,3).map(tripForecastPreviewHtml).join("")}`;
+ }catch(e){preview.innerHTML='<div class="worker-status error">⚠️ Previsioni non disponibili</div>';}
+}
 function renderTripZone(zone){
- const grid=document.getElementById("trip-grid"),extras=document.getElementById("trip-extras");
- grid.querySelectorAll("[data-trip-id]").forEach(el=>{el.hidden=TRIP_ZONE_BY_ID[el.dataset.tripId]!==zone;});
- const extra=TRIP_EXTRA_SOURCES[zone]||[];
- extras.innerHTML=extra.map(tripExtraHtml).join("");
- extras.querySelectorAll("[data-src]").forEach(btn=>btn.addEventListener("click",()=>openModal(`<div class="trip-iframe-modal"><h2>${btn.dataset.title}</h2><iframe src="${btn.dataset.src}" title="${btn.dataset.title}" loading="lazy"></iframe></div>`)));
+ selectedTripZone=zone; const cfg=zoneConfig(zone),grid=document.getElementById("trip-grid");
+ const allowed=new Set(cfg.stations);
+ let shown=0;
+ grid.querySelectorAll("[data-trip-id]").forEach(el=>{const visible=allowed.has(el.dataset.tripId)&&shown<3;el.hidden=!visible;if(visible)shown++;});
+ document.getElementById("trip-page-link").href=`escursioni.html?zona=${zone}`;
+ loadTripForecast(zone);
 }
 
 function initTripZones(){
@@ -660,7 +645,7 @@ async function loadTripStations(){
    el.addEventListener("click",()=>openTripModal(el.dataset.tripId));
    el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openTripModal(el.dataset.tripId);}});
   });
-  renderTripZone(document.querySelector(".trip-zone.active")?.dataset.zone||"catinaccio");
+  renderTripZone(selectedTripZone);
  }catch(e){
   console.error(e);
   status.textContent="⚠️ Dati stazioni in quota non disponibili"; status.className="worker-status error";
