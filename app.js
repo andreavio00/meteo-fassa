@@ -594,8 +594,8 @@ function openTripModal(id){
 let selectedTripZone="catinaccio";
 function zoneConfig(zone){return window.METEO_FASSA_TRIPS.zones[zone]||window.METEO_FASSA_TRIPS.zones.catinaccio;}
 function currentTripPeriod(location){
- const now=Date.now();
- return (location.periods_3h||[]).find(p=>new Date(p.end).getTime()>now)||(location.periods_3h||[])[0];
+ const now=new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Rome",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date()).replace(" ","T");
+ return (location.periods_3h||[]).find(p=>p.end>now)||(location.periods_3h||[])[0];
 }
 function tripForecastPreviewHtml(location){
  const p=currentTripPeriod(location); if(!p)return "";
