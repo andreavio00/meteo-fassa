@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#456d5a">
+<meta name="theme-color" content="#315f53">
+<meta name="description" content="Condizioni osservate e previsioni per le escursioni in Val di Fassa.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Meteo Fassa">
 <title>Meteo escursioni — Val di Fassa</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon-64.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./escursioni.css">
 <script>
@@ -49,5 +57,6 @@ window.addEventListener("load",()=>setTimeout(()=>{
 <dialog id="detail-dialog"><button class="dialog-close" aria-label="Chiudi">✕</button><div id="detail-dialog-body"></div></dialog>
 <script src="./trip-config.js"></script>
 <script src="./escursioni.js"></script>
+<script src="./pwa.js"></script>
 </body>
 </html>

@@ -193,6 +193,11 @@ trip-config.js
 escursioni.html
 escursioni.css
 escursioni.js
+manifest.webmanifest
+sw.js
+pwa.js
+offline.html
+icons/
 ```
 
 In sintesi:
@@ -302,7 +307,26 @@ Sono i Worker a occuparsi di:
 
 ---
 
-## 8. Stato del progetto – 11 settembre 2026
+## 8. Progressive Web App
+
+Il sito è installabile come PWA da Android e dagli altri browser compatibili.
+`manifest.webmanifest` definisce nome, colori, icone, pagina iniziale e due
+scorciatoie: **Pozza Live** e **Le escursioni**. Quando il browser lo consente,
+nella home compare anche il pulsante **Installa app**.
+
+`sw.js` conserva i file essenziali delle due pagine e permette di riaprirle
+anche senza rete. Le richieste ai Worker meteo non vengono intercettate dal
+service worker: gli ultimi JSON validi continuano a essere gestiti dalle cache
+`localStorage` già previste dal frontend. In questo modo un valore vecchio non
+viene confuso con una nuova risposta del Worker.
+
+Quando cambia l'elenco o una versione coordinata dei file precalcolati, va
+incrementato `CACHE_NAME` in `sw.js`, così i dispositivi eliminano la vecchia
+cache applicativa dopo l'aggiornamento.
+
+---
+
+## 9. Stato del progetto – 11 settembre 2026
 
 ### Funzionante
 
@@ -324,18 +348,20 @@ Sono i Worker a occuparsi di:
 - testata escursioni compatta con accessi evidenti a Pozza Live e alle previsioni 08–20
 - stazioni in quota lette dagli endpoint di zona dell'Aggregator
 - previsioni escursioni limitate alle fasce 08–20
+- PWA installabile con manifest, icone dedicate e scorciatoie per Pozza ed escursioni
+- service worker limitato ai file del sito, con navigazione offline e aggiornamento dalla rete
+- cache dei dati meteo ancora gestita dal frontend, senza duplicarla nel service worker
 
 ### Prossimi sviluppi
 
 - resa e leggibilità su telefoni di dimensioni diverse
 - eventuali ulteriori esclusioni o riordini di stazioni e punti previsionali
-- service worker, manifest e icone per rendere il sito installabile come web app
 - pagina per richiedere la previsione di una località scelta dall'utente e consultare insieme tutte le stazioni
 - pulizia progressiva del vecchio codice escursioni rimasto in `app.js`
 
 ---
 
-## 9. Repository
+## 10. Repository
 
 Frontend / GitHub Pages:
 

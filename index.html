@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#4a6670">
+<meta name="theme-color" content="#315f53">
+<meta name="description" content="Condizioni osservate e previsioni per Pozza e le escursioni in Val di Fassa.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Meteo Fassa">
 <title>Meteo Val di Fassa</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon-64.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./stations-ui.css">
 <link rel="stylesheet" href="./forecast-ui.css">
@@ -26,6 +34,7 @@ window.addEventListener("load",()=>setTimeout(()=>{
 <div class="eyebrow">🏔️ Val di Fassa</div>
 <h1><span class="title-icon">🏔️</span>Pozza live</h1>
 <div id="worker-status" class="worker-status">Aggiornamento dati…</div>
+<button id="pwa-install" class="pwa-install" type="button" hidden>Installa app</button>
 </header>
 
 <section class="main-stations" aria-label="Stazioni intorno a Pozza di Fassa">
@@ -84,5 +93,6 @@ window.addEventListener("load",()=>setTimeout(()=>{
 <script src="./stations-ui.js"></script>
 <script src="./app.js"></script>
 <script src="./forecast-ui.js"></script>
+<script src="./pwa.js"></script>
 </body>
 </html>
