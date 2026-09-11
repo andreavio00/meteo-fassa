@@ -5,9 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#4a6670">
 <title>Meteo Val di Fassa</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="stations-ui.css">
-<link rel="stylesheet" href="forecast-ui.css">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./stations-ui.css">
+<link rel="stylesheet" href="./forecast-ui.css">
+<script>
+window.addEventListener("load",()=>setTimeout(()=>{
+ const styles=getComputedStyle(document.documentElement);
+ const ready=styles.getPropertyValue("--ink").trim()&&styles.getPropertyValue("--stations-ui-ready").trim();
+ const key=`meteo-fassa-style-retry:${location.pathname}`;
+ try{
+  if(!ready&&sessionStorage.getItem(key)!=="1"){sessionStorage.setItem(key,"1");location.reload();}
+  else if(ready)sessionStorage.removeItem(key);
+ }catch{}
+},250));
+</script>
 </head>
 <body>
 <main class="page">
@@ -17,15 +28,13 @@
 <div id="worker-status" class="worker-status">Aggiornamento dati…</div>
 </header>
 
-<section aria-label="Stazioni di riferimento">
-<div class="reference-grid">
-<div id="hero-station"></div>
-<div id="pozza-amateur"></div>
+<section class="main-stations" aria-label="Stazioni intorno a Pozza di Fassa">
+<div class="main-stations-track">
+<div id="hero-station" class="main-station-slot"></div>
+<div id="pozza-amateur" class="main-station-slot"></div>
+<div id="compact-stations" class="main-station-tail"></div>
 </div>
-</section>
-
-<section aria-label="Stazioni di confronto">
-<div id="compact-stations" class="compact-grid"></div>
+<div class="station-swipe-hint" aria-hidden="true">Scorri per Monzon e Moena →</div>
 </section>
 
 <section class="forecast-section">
@@ -50,25 +59,17 @@
 </details>
 </section>
 
-<section class="trip-section">
-<details id="trip-details">
-<summary>
-<span><strong>🥾 Per un’escursione</strong><small>Situazione in quota e previsioni</small></span>
-<span class="summary-arrow">▼</span>
-</summary>
-<div class="trip-content">
-<div class="trip-zones" role="tablist" aria-label="Zone escursioni">
-<button class="trip-zone active" data-zone="catinaccio" type="button">Catinaccio</button>
-<button class="trip-zone" data-zone="sella" type="button">Gruppo del Sella e Sassolungo</button>
-<button class="trip-zone" data-zone="marmolada" type="button">Marmolada e Val San Nicolò</button>
-<button class="trip-zone" data-zone="moena" type="button">Moena e Latemar</button>
+<section class="trip-launcher" aria-labelledby="trip-launcher-title">
+<div class="trip-launcher-head">
+<span class="trip-launcher-icon" aria-hidden="true">🥾</span>
+<span><strong id="trip-launcher-title">Per un’escursione</strong><small>Condizioni in quota dalle 08 alle 20</small></span>
 </div>
-<div id="trip-status" class="worker-status">Tocca per caricare i dati…</div>
-<div id="trip-grid" class="trip-grid"></div>
-<div id="trip-forecast-preview" class="trip-forecast-preview"></div>
-<a id="trip-page-link" class="trip-page-link" href="escursioni.html?zona=catinaccio">Apri la pagina completa →</a>
+<div class="trip-launcher-grid">
+<a class="trip-launcher-zone zone-catinaccio" href="./escursioni.html?zona=catinaccio"><span>⛰️</span><strong>Catinaccio</strong></a>
+<a class="trip-launcher-zone zone-sella" href="./escursioni.html?zona=sella"><span>🪨</span><strong>Sella e Sassolungo</strong></a>
+<a class="trip-launcher-zone zone-marmolada" href="./escursioni.html?zona=marmolada"><span>🏔️</span><strong>Marmolada e Val San Nicolò</strong></a>
+<a class="trip-launcher-zone zone-moena" href="./escursioni.html?zona=moena"><span>🌲</span><strong>Moena e Latemar</strong></a>
 </div>
-</details>
 </section>
 </main>
 
@@ -79,9 +80,9 @@
 </div>
 </div>
 
-<script src="trip-config.js?v=2"></script>
-<script src="stations-ui.js"></script>
-<script src="app.js?v=2"></script>
-<script src="forecast-ui.js"></script>
+<script src="./trip-config.js"></script>
+<script src="./stations-ui.js"></script>
+<script src="./app.js"></script>
+<script src="./forecast-ui.js"></script>
 </body>
 </html>

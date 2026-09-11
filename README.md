@@ -189,6 +189,10 @@ stations-ui.css
 stations-ui.js
 forecast-ui.css
 forecast-ui.js
+trip-config.js
+escursioni.html
+escursioni.css
+escursioni.js
 ```
 
 In sintesi:
@@ -202,24 +206,69 @@ In sintesi:
 
 ## 6. Meteo per le escursioni
 
-La home contiene una sintesi per zona e rimanda alla pagina completa `escursioni.html`.
-Osservazioni e previsioni restano distinte e arrivano esclusivamente dai due
-Aggregator normalizzati:
+La home non carica più osservazioni e previsioni in quota al proprio interno.
+Mostra invece quattro accessi colorati, uno per zona, che aprono direttamente
+la pagina dedicata `escursioni.html`. In questo modo l'apertura delle previsioni
+di Pozza non allunga anche la sezione delle escursioni nella stessa pagina.
+
+Nella pagina dedicata osservazioni e previsioni restano distinte e arrivano
+esclusivamente dai due Aggregator normalizzati:
 
 - stazioni osservate: `https://gite-meteo-aggregator.andrea-vio.workers.dev/`
 - previsioni: `https://gite-previsioni-aggregator.andrea-vio.workers.dev/`
 
 Le quattro zone sono Catinaccio, Sella e Sassolungo, Marmolada e Val San
-Nicolò, Moena e Latemar. La configurazione condivisa si trova in
-`trip-config.js`: usa la `key` univoca delle 19 stazioni e collega ogni zona al
-relativo endpoint previsionale `/zone/...`. Una stazione può appartenere a più
-zone.
+Nicolò, Moena e Latemar. Colore e simbolo rendono riconoscibile la zona anche
+su uno schermo piccolo.
 
-La home mostra al massimo tre stazioni e tre punti previsionali della zona
-selezionata. La pagina completa mostra tutte le stazioni associate e le fasce
-diurne dei primi tre giorni disponibili. Il frontend preserva i valori `null`,
-distingue pioggia istantanea e accumulo e segnala i dati osservati più vecchi
-di 60 minuti quando è disponibile il timestamp della misura.
+La configurazione condivisa si trova in `trip-config.js`. Il frontend usa gli
+endpoint `/zone/...` già configurati nei Worker e non mantiene un secondo
+elenco completo delle associazioni. Conserva soltanto due esclusioni di
+presentazione, senza eliminare le stazioni dall'Aggregator:
+
+- `fassa:coldeirossi` non viene mostrata nella zona Sella e Sassolungo
+- `predazzo:passofeudo` non viene mostrata nella zona Moena e Latemar
+
+Il nome della stazione `trentino:campitello` viene presentato come **Val Duron
+– Malga do Col d'Aura** tramite un override frontend, in attesa di uniformare
+eventualmente il nome anche nel Worker.
+
+Ogni zona mostra quattro stazioni osservate. I punti previsionali disponibili
+restano invece quelli effettivamente forniti dall'Aggregator: 4 per Catinaccio,
+4 per Sella e Sassolungo, 6 per Marmolada e Val San Nicolò e 3 per Moena e
+Latemar. Per usare bene lo spazio viene visualizzata una sola fascia alla volta,
+selezionabile tra `08–11`, `11–14`, `14–17` e `17–20`, per i primi tre giorni
+disponibili. Il tocco su una scheda apre i dati di dettaglio.
+
+Il frontend preserva i valori `null`, distingue pioggia istantanea e accumulo e
+segnala i dati osservati più vecchi di 60 minuti quando è disponibile il
+timestamp della misura.
+
+Sopra **Condizioni osservate**, la dicitura **Dati raccolti alle HH:MM** usa
+esclusivamente `generated_at` dell'Aggregator delle stazioni. Indica quando il
+dataset delle stazioni è stato raccolto, non l'ora dell'Aggregator delle
+previsioni né necessariamente quella dell'ultima misura: la freschezza di ogni
+sensore continua a essere indicata nella rispettiva scheda. La riga di stato
+separata compare soltanto se una sorgente non è disponibile o se viene mostrata
+la copia locale salvata dopo un aggiornamento non riuscito.
+
+Per rendere più stabile il passaggio tra home e pagina escursioni, gli ultimi
+JSON validi vengono conservati nel `localStorage` per un massimo di 6 ore e
+mostrati subito mentre parte l'aggiornamento. Le richieste della pagina
+escursioni hanno un timeout di 30 secondi. Il prototipo locale usa riferimenti
+agli asset senza query string e tenta automaticamente un solo ricaricamento se
+il piccolo server Android non consegna i fogli di stile al primo accesso.
+
+Esiste inoltre una protezione temporanea per i codici che l'Aggregator delle
+previsioni restituisce come `unknown`: il frontend consulta `source_code` solo
+in questo caso. Per esempio il codice Meteo.report `C` viene correttamente
+mostrato come **Parzialmente nuvoloso**. La soluzione definitiva resta
+completare la tabella di normalizzazione nel Worker, così questa conoscenza non
+rimane nel frontend.
+
+Nelle schede previsionali la pioggia debole usa ora un leggero richiamo azzurro.
+Il rosso è riservato a condizioni più importanti (severità almeno 90, almeno
+5 mm in tre ore oppure raffiche di almeno 70 km/h).
 
 ---
 
@@ -249,7 +298,7 @@ Sono i Worker a occuparsi di:
 
 ---
 
-## 8. Stato del progetto – 9 settembre 2026
+## 8. Stato del progetto – 11 settembre 2026
 
 ### Funzionante
 
@@ -265,14 +314,19 @@ Sono i Worker a occuparsi di:
 - cache locale browser
 - previsioni San Giovanni di Fassa da meteo.report
 - interfaccia previsioni giornaliere e triorarie
+- home compatta con quattro stazioni scorrevoli su mobile
+- card amatoriale di Pozza più piccola e arrotondata, per darle un peso visivo secondario
+- pagina escursioni separata con quattro zone
+- testata escursioni compatta con accessi evidenti a Pozza Live e alle previsioni 08–20
+- stazioni in quota lette dagli endpoint di zona dell'Aggregator
+- previsioni escursioni limitate alle fasce 08–20
 
-### Da completare
+### Da verificare prima della pubblicazione
 
-- consolidamento definitivo della sezione **escursioni**
-- definizione del formato finale dei dati delle stazioni in quota
-- definizione del formato finale delle previsioni per le gite
-- eventuale ampliamento delle località
-- pulizia progressiva del vecchio codice rimasto in `app.js`
+- resa e leggibilità su telefoni di dimensioni diverse
+- eventuali ulteriori esclusioni o riordini di stazioni e punti previsionali
+- rinomina di `trentino:campitello` direttamente nel Worker
+- pulizia progressiva del vecchio codice escursioni rimasto in `app.js`
 
 ---
 

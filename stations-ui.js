@@ -38,10 +38,12 @@
 
     if(!data){
       box.innerHTML=`<article class="station-card pozza-amateur-card pozza-amateur-offline">
-        <div class="pozza-amateur-title">📍 <strong>Pozza di Fassa</strong></div>
-        <div class="pozza-amateur-badge">STAZIONE AMATORIALE</div>
+        <div class="pozza-amateur-top">
+          <div class="pozza-amateur-title">📍 <strong>Pozza di Fassa</strong></div>
+          <div class="pozza-amateur-badge">AMATORIALE</div>
+        </div>
         <div class="pozza-amateur-unavailable">Dati momentaneamente non disponibili</div>
-        <div class="pozza-amateur-note">Dati non ufficiali</div>
+        <div class="pozza-amateur-footer"><span>Dati non ufficiali</span></div>
       </article>`;
       return;
     }
@@ -51,15 +53,18 @@
     const updated=data.aggiornamento??data.timestamp??null;
 
     box.innerHTML=`<article class="station-card pozza-amateur-card" aria-label="Stazione amatoriale Pozza di Fassa">
-      <div class="pozza-amateur-title">📍 <strong>Pozza di Fassa</strong></div>
-      <div class="pozza-amateur-badge">STAZIONE AMATORIALE</div>
+      <div class="pozza-amateur-top">
+        <div class="pozza-amateur-title">📍 <strong>Pozza di Fassa</strong></div>
+        <div class="pozza-amateur-badge">AMATORIALE</div>
+      </div>
       <div class="pozza-amateur-values">
         <strong>${fmtNumber(temp)}°</strong>
         <span>💧 ${fmtNumber(humidity,0)}%</span>
       </div>
-      <div class="pozza-amateur-note">Dati non ufficiali</div>
-      <div class="pozza-amateur-time">Rilevato alle ${fmtTime(updated)}</div>
-      <a class="pozza-amateur-source" href="https://www.fassaweb.net/it-it/meteoestrade/datirilevatiapozzadifassa.aspx" target="_blank" rel="noopener">FassaWEB ↗</a>
+      <div class="pozza-amateur-footer">
+        <span>Dati non ufficiali · ${fmtTime(updated)}</span>
+        <a class="pozza-amateur-source" href="https://www.fassaweb.net/it-it/meteoestrade/datirilevatiapozzadifassa.aspx" target="_blank" rel="noopener">Fonte ↗</a>
+      </div>
     </article>`;
   }
 

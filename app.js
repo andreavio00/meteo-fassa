@@ -1,5 +1,5 @@
 const WORKER_URL="https://meteopozza-stazioni.andrea-vio.workers.dev/";
-const WORKER_TIMEOUT=7000;
+const WORKER_TIMEOUT=20000;
 const DATA_AGE_WARNING=30;
 const DATA_AGE_OLD=60;
 
@@ -350,10 +350,32 @@ function tripModalHtml(s){
 // Il worker dedicato normalizza gia' il feed meteo.report in giornate
 // complete (days[]) con riepilogo giornaliero e fasce di 3 ore.
 const METEO_REPORT_FORECAST_URL="https://meteopozza-previsioni.andrea-vio.workers.dev/";
-const FORECAST_TIMEOUT=9000;
+const FORECAST_TIMEOUT=30000;
+const FORECAST_CACHE_KEY="meteo-fassa-pozza-forecast-v1";
+const FORECAST_CACHE_MAX_AGE=6*60*60*1000;
 
 let forecastDays=[];
 let selectedForecastDate=null;
+
+function readForecastCache(){
+ try{
+  const item=JSON.parse(localStorage.getItem(FORECAST_CACHE_KEY)||"null");
+  if(!item?.savedAt||!Array.isArray(item.data?.days)||Date.now()-item.savedAt>FORECAST_CACHE_MAX_AGE)return null;
+  return item.data;
+ }catch{return null;}
+}
+function writeForecastCache(data){
+ try{localStorage.setItem(FORECAST_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data}));}catch{}
+}
+function applyForecastPayload(raw){
+ if(!Array.isArray(raw?.days)||!raw.days.length)throw Error("Formato previsioni inatteso");
+ forecastDays=raw.days;
+ renderForecastPreview();
+ renderForecastTabs();
+ const today=forecastTodayIso();
+ const initial=forecastDays.find(day=>day.date===today)||forecastDays[0];
+ renderForecastDay(initial.date);
+}
 
 function forecastCondition(value){
  const raw=String(value??"").trim();
@@ -540,26 +562,28 @@ async function loadForecast(){
  const tabs=document.getElementById("forecast-tabs"),summary=document.getElementById("forecast-day-summary");
  const preview=document.getElementById("forecast-preview");
  if(status){status.hidden=true;status.textContent="";}
+ const cached=readForecastCache();
+ if(cached){
+  try{applyForecastPayload(cached);}catch{}
+ }
  try{
   const res=await fetchWithTimeout(`${METEO_REPORT_FORECAST_URL}?_=${Date.now()}`,FORECAST_TIMEOUT);
   if(!res.ok)throw Error(`HTTP ${res.status}`);
   const raw=await res.json();
-  if(!Array.isArray(raw.days)||!raw.days.length)throw Error("Formato previsioni inatteso");
-
-  forecastDays=raw.days;
-  renderForecastPreview();
-  renderForecastTabs();
-  const today=forecastTodayIso();
-  const initial=forecastDays.find(d=>d.date===today)||forecastDays[0];
-  renderForecastDay(initial.date);
+  applyForecastPayload(raw);
+  writeForecastCache(raw);
  }catch(e){
   console.error(e);
-  forecastDays=[]; selectedForecastDate=null;
-  if(preview)preview.textContent="Previsioni momentaneamente non disponibili";
-  if(status){status.hidden=false;status.textContent="⚠️ Previsioni non disponibili al momento";status.className="worker-status error";}
-  if(tabs)tabs.innerHTML="";
-  if(summary)summary.innerHTML="";
-  if(grid)grid.innerHTML="";
+  if(cached&&forecastDays.length){
+   if(status){status.hidden=false;status.textContent="Ultime previsioni salvate · aggiornamento non riuscito";status.className="worker-status";}
+  }else{
+   forecastDays=[]; selectedForecastDate=null;
+   if(preview)preview.textContent="Previsioni momentaneamente non disponibili";
+   if(status){status.hidden=false;status.textContent="⚠️ Previsioni non disponibili al momento";status.className="worker-status error";}
+   if(tabs)tabs.innerHTML="";
+   if(summary)summary.innerHTML="";
+   if(grid)grid.innerHTML="";
+  }
  }
 }
 
@@ -654,6 +678,7 @@ async function loadTripStations(){
 
 function initTripSection(){
  const details=document.getElementById("trip-details");
+ if(!details)return;
  let loaded=false;
  function scrollToTrip(){
   requestAnimationFrame(()=>details.scrollIntoView({behavior:"smooth",block:"start"}));
@@ -670,15 +695,22 @@ function initTripSection(){
    scrollToTrip();
   }
  });
- document.getElementById("modal-close").addEventListener("click",closeModal);
- document.getElementById("modal-backdrop").addEventListener("click",e=>{
+}
+initTripSection();
+
+function initModal(){
+ const close=document.getElementById("modal-close");
+ const backdrop=document.getElementById("modal-backdrop");
+ if(!close||!backdrop)return;
+ close.addEventListener("click",closeModal);
+ backdrop.addEventListener("click",e=>{
   if(e.target.id==="modal-backdrop")closeModal();
  });
  document.addEventListener("keydown",e=>{
   if(e.key==="Escape")closeModal();
  });
 }
-initTripSection();
+initModal();
 
 function attachStationClickHandlers(){
  document.querySelectorAll("[data-station-id]").forEach(el=>{

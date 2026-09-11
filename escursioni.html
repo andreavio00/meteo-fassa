@@ -3,34 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#4a6670">
+<meta name="theme-color" content="#456d5a">
 <title>Meteo escursioni — Val di Fassa</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="escursioni.css">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./escursioni.css">
+<script>
+window.addEventListener("load",()=>setTimeout(()=>{
+ const styles=getComputedStyle(document.documentElement);
+ const ready=styles.getPropertyValue("--ink").trim()&&styles.getPropertyValue("--hike-ui-ready").trim();
+ const key=`meteo-fassa-style-retry:${location.pathname}`;
+ try{
+  if(!ready&&sessionStorage.getItem(key)!=="1"){sessionStorage.setItem(key,"1");location.reload();}
+  else if(ready)sessionStorage.removeItem(key);
+ }catch{}
+},250));
+</script>
 </head>
-<body>
+<body data-zone="catinaccio">
 <main class="hike-page">
  <header class="hike-header">
-  <a href="index.html" class="back-link">← Pozza live</a>
-  <div class="eyebrow">🥾 Meteo in quota</div>
-  <h1>Le escursioni</h1>
-  <p>Confronta ciò che sta accadendo nelle stazioni con le previsioni delle prossime ore.</p>
+  <div class="hike-header-actions">
+   <a href="./index.html" class="back-link"><span aria-hidden="true">←</span> Pozza live</a>
+   <a href="#forecast-panel" class="forecast-jump">Previsioni 08–20 <span aria-hidden="true">↓</span></a>
+  </div>
+  <div class="hike-title-row"><span class="hike-title-icon" aria-hidden="true">🥾</span><div><div class="eyebrow">Meteo in quota</div><h1>Le escursioni</h1></div></div>
+  <p>Stazioni reali e previsioni in quota, zona per zona.</p>
  </header>
  <nav id="hike-zones" class="hike-zones" aria-label="Zone escursioni"></nav>
- <div id="hike-status" class="worker-status">Aggiornamento dati…</div>
- <section aria-labelledby="observed-title">
-  <div class="section-title"><div><span>ADESSO</span><h2 id="observed-title">Condizioni osservate</h2></div><small>Dati misurati dalle stazioni</small></div>
+ <div id="hike-status" class="worker-status" hidden></div>
+ <section class="hike-panel" aria-labelledby="observed-title">
+  <div class="section-title"><div><span id="observed-kicker">AGGIORNAMENTO STAZIONI…</span><h2 id="observed-title">Condizioni osservate</h2></div><small>Dati misurati dalle stazioni</small></div>
   <div id="observed-grid" class="observed-grid"></div>
  </section>
- <section aria-labelledby="forecast-title">
-  <div class="section-title"><div><span>PROSSIME ORE</span><h2 id="forecast-title">Previsioni</h2></div><small>Fasce di tre ore</small></div>
+ <section id="forecast-panel" class="hike-panel forecast-panel" aria-labelledby="forecast-title">
+  <div class="section-title"><div><span>DALLE 08 ALLE 20</span><h2 id="forecast-title">Previsioni</h2></div><small>Scegli giorno e fascia</small></div>
+  <div class="forecast-control-label">Giorno</div>
   <div id="day-tabs" class="day-tabs" role="tablist" aria-label="Giorni di previsione"></div>
-  <div id="forecast-locations" class="forecast-locations"></div>
+  <div class="forecast-control-label">Fascia oraria</div>
+  <div id="period-tabs" class="period-tabs" role="tablist" aria-label="Fasce orarie"></div>
+  <div id="forecast-window" class="forecast-window" aria-live="polite"></div>
+  <div id="forecast-grid" class="forecast-point-grid"></div>
  </section>
  <p class="hike-note">Le osservazioni descrivono le condizioni presso le stazioni; le previsioni riguardano punti modello e possono differire localmente.</p>
 </main>
-<dialog id="station-dialog"><button class="dialog-close" aria-label="Chiudi">✕</button><div id="station-dialog-body"></div></dialog>
-<script src="trip-config.js?v=2"></script>
-<script src="escursioni.js?v=2"></script>
+<dialog id="detail-dialog"><button class="dialog-close" aria-label="Chiudi">✕</button><div id="detail-dialog-body"></div></dialog>
+<script src="./trip-config.js"></script>
+<script src="./escursioni.js"></script>
 </body>
 </html>

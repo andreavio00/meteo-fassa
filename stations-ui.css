@@ -1,23 +1,65 @@
-.reference-grid{
+:root{--stations-ui-ready:1}
+.main-stations{margin-bottom:9px}
+.main-stations-track{
   display:grid;
-  grid-template-columns:minmax(0,1.75fr) minmax(145px,.72fr);
+  grid-template-columns:1.08fr .82fr 1fr 1fr;
   gap:8px;
   align-items:stretch;
-  margin-bottom:9px;
 }
-.reference-grid .hero-card{margin-bottom:0;height:100%}
+.main-station-tail{display:contents}
+.main-station-slot{min-width:0}
+.main-stations-track .station-card{
+  height:100%;
+  margin:0;
+  padding:11px;
+}
+.main-stations-track .hero-card,
+.main-stations-track .compact-card{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.main-stations-track .hero-values{gap:6px}
+.main-stations-track .hero-thr{margin-top:2px}
+.main-stations-track .station-name{font-size:14px}
+.main-stations-track .hero-value,
+.main-stations-track .compact-value{font-size:24px}
+.main-stations-track .hero-value-humidity,
+.main-stations-track .value-humidity{font-size:15px}
+.main-stations-track .rain-row{font-size:10px;white-space:normal}
+.main-stations-track .data-time{margin-top:auto}
+.station-swipe-hint{
+  display:none;
+  margin:5px 4px 0;
+  color:var(--ink-soft);
+  font-size:10px;
+  font-weight:700;
+  text-align:right;
+}
 #pozza-amateur{
   min-width:0;
-  align-self:center;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  padding:8px 5px;
 }
+#pozza-amateur .pozza-amateur-card{height:auto;padding:11px 12px}
 .pozza-amateur-card{
-  padding:9px 10px;
+  width:100%;
+  padding:11px 12px;
   border:1.5px solid #b85a4c;
-  box-shadow:0 2px 10px rgba(120,55,45,.08);
+  border-radius:28px;
+  box-shadow:0 2px 8px rgba(120,55,45,.07);
   background:#fffdfc;
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:7px;
+}
+.pozza-amateur-top{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
 }
 .pozza-amateur-title{
   display:flex;
@@ -40,8 +82,10 @@
 }
 .pozza-amateur-values{
   display:flex;
-  flex-direction:column;
-  gap:2px;
+  flex-direction:row;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:7px;
   margin-top:1px;
 }
 .pozza-amateur-values strong{
@@ -54,21 +98,20 @@
   font-weight:750;
   color:var(--ink-soft);
 }
-.pozza-amateur-note{
-  margin-top:2px;
+.pozza-amateur-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:5px;
   padding-top:5px;
   border-top:1px solid #efd7d2;
   color:#8a3f34;
-  font-size:9px;
-  line-height:1.2;
-  font-weight:800;
-}
-.pozza-amateur-time{
-  color:var(--ink-soft);
   font-size:8px;
-  line-height:1.15;
+  line-height:1.2;
+  font-weight:750;
 }
 .pozza-amateur-source{
+  flex:0 0 auto;
   color:#8a3f34;
   font-size:8px;
   font-weight:800;
@@ -79,17 +122,28 @@
   font-size:10px;
   line-height:1.25;
 }
+@media(max-width:600px){
+  .main-stations-track{
+    display:flex;
+    gap:7px;
+    overflow-x:auto;
+    padding:1px 1px 7px;
+    scroll-snap-type:x mandatory;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .main-stations-track::-webkit-scrollbar{display:none}
+  .main-station-slot,
+  .main-station-tail>.station-card{
+    flex:0 0 calc((100% - 7px)/2);
+    scroll-snap-align:start;
+  }
+  #pozza-amateur{padding:10px 7px}
+  .station-swipe-hint{display:block}
+}
 @media(max-width:380px){
-  .reference-grid{grid-template-columns:minmax(0,1.55fr) minmax(132px,.8fr);gap:6px}
-  .pozza-amateur-card{padding:8px}
+  #pozza-amateur .pozza-amateur-card{padding:8px}
   .pozza-amateur-title{font-size:12px}
   .pozza-amateur-values strong{font-size:22px}
   .pozza-amateur-values span{font-size:14px}
-}
-@media(max-width:340px){
-  .reference-grid{grid-template-columns:1fr}
-  #pozza-amateur{align-self:stretch}
-  .pozza-amateur-card{min-height:0}
-  .pozza-amateur-values{flex-direction:row;align-items:baseline;gap:14px}
-  .pozza-amateur-note{margin-top:2px}
 }

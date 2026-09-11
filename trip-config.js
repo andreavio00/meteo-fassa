@@ -1,10 +1,24 @@
 window.METEO_FASSA_TRIPS={
  stationsUrl:"https://gite-meteo-aggregator.andrea-vio.workers.dev/",
  forecastUrl:"https://gite-previsioni-aggregator.andrea-vio.workers.dev",
+ stationNameOverrides:{
+  "trentino:campitello":"Val Duron – Malga do Col d’Aura"
+ },
  zones:{
-  catinaccio:{name:"Catinaccio",forecastId:"catinaccio",stations:["fassa:gardeccia","fassa:principe","trentino:costalunga"]},
-  sella:{name:"Sella e Sassolungo",forecastId:"sassolungo_sella",stations:["fassa:passosella","fassa:sasspordoi","fassa:pizboe","fassa:coldeirossi","predazzo:colrodella","trentino:campitello","trentino:gries"]},
-  marmolada:{name:"Marmolada e Val San Nicolò",forecastId:"marmolada_val_s_nicolo",stations:["trentino:fedaia","trentino:ciampac","trentino:sasdelmul","fassa:coldeirossi","fassa:sasspordoi","trentino:gries"]},
-  moena:{name:"Moena e Latemar",forecastId:"moena_latemar",stations:["trentino:moena","trentino:costalunga","fassa:rolle","fassa:paradiso","predazzo:gardone","predazzo:passofeudo","predazzo:torredipisa"]}
+  catinaccio:{
+   name:"Catinaccio",icon:"⛰️",stationZoneId:"catinaccio",forecastId:"catinaccio",excludeStations:[]
+  },
+  sella:{
+   name:"Sella e Sassolungo",icon:"🪨",stationZoneId:"sassolungo_sella",forecastId:"sassolungo_sella",
+   excludeStations:["fassa:coldeirossi"]
+  },
+  marmolada:{
+   name:"Marmolada e Val San Nicolò",icon:"🏔️",stationZoneId:"marmolada_val_s_nicolo",forecastId:"marmolada_val_s_nicolo",
+   excludeStations:[]
+  },
+  moena:{
+   name:"Moena e Latemar",icon:"🌲",stationZoneId:"moena_latemar",forecastId:"moena_latemar",
+   excludeStations:["predazzo:passofeudo"]
+  }
  }
 };

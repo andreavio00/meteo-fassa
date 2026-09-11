@@ -217,6 +217,60 @@ details[open] .summary-arrow{transform:rotate(180deg)}
  .metrics{grid-template-columns:1fr 1fr 1fr}
 }
 
+/* --- Accesso compatto alla pagina Escursioni --- */
+.trip-launcher{
+ margin-top:9px;
+ padding:13px;
+ border:1px solid #d8e1de;
+ border-radius:16px;
+ background:linear-gradient(135deg,#ffffff 0,#f3f7f4 100%);
+ box-shadow:0 2px 10px rgba(20,40,60,.07)
+}
+.trip-launcher-head{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.trip-launcher-head>span:last-child{display:flex;flex-direction:column;gap:2px}
+.trip-launcher-head strong{font-size:14px}
+.trip-launcher-head small{font-size:10px;color:var(--ink-soft)}
+.trip-launcher-icon{font-size:23px;line-height:1}
+.trip-launcher-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.trip-launcher-zone{
+ --zone-color:#4a6670;
+ --zone-soft:#edf2f1;
+ min-height:68px;
+ display:flex;
+ align-items:center;
+ gap:8px;
+ padding:10px;
+ border:1px solid #cfd9d6;
+ border-color:color-mix(in srgb,var(--zone-color) 32%,white);
+ border-radius:12px;
+ background:var(--zone-soft);
+ color:#263740;
+ text-decoration:none;
+ line-height:1.15;
+ transition:transform .15s,box-shadow .15s
+}
+.trip-launcher-zone:hover,.trip-launcher-zone:focus-visible{
+ transform:translateY(-1px);
+ box-shadow:0 4px 12px color-mix(in srgb,var(--zone-color) 18%,transparent);
+ outline:2px solid color-mix(in srgb,var(--zone-color) 55%,white);
+ outline-offset:2px
+}
+.trip-launcher-zone>span{font-size:23px;line-height:1;flex:0 0 auto}
+.trip-launcher-zone strong{font-size:11px}
+.zone-catinaccio{--zone-color:#bd694b;--zone-soft:#fbede7}
+.zone-sella{--zone-color:#a97b2d;--zone-soft:#faf1dc}
+.zone-marmolada{--zone-color:#397995;--zone-soft:#e8f3f8}
+.zone-moena{--zone-color:#4c7557;--zone-soft:#eaf3ec}
+
+@media(max-width:600px){
+ .trip-launcher-grid{grid-template-columns:1fr 1fr}
+ .trip-launcher-zone{min-height:62px;padding:9px}
+}
+@media(max-width:350px){
+ .trip-launcher-zone strong{font-size:10px}
+ .trip-launcher-zone>span{font-size:20px}
+}
+
 
 /* Per un'escursione: selezione zone e fonti aggiuntive */
 .trip-zones{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
