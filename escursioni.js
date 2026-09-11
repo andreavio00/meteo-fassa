@@ -140,6 +140,9 @@ function stationDetail(station){
  const rain=rainValue(station);
  const measured=measureTime(station);
  const windDirection=station.windDirection?` ${station.windDirection}`:"";
+ const sourceLink=station.sourceUrl
+  ?`<a class="source-button dialog-source" href="${esc(station.sourceUrl)}" target="_blank" rel="noopener">🌐 Apri il sito della fonte ↗</a>`
+  :"";
  const rows=[
   ["Temperatura",finite(station.temperature)?`${fmt(station.temperature)} °C`:null],
   ["Percepita",finite(station.feelsLike)?`${fmt(station.feelsLike)} °C`:null],
@@ -153,7 +156,7 @@ function stationDetail(station){
  ];
  return `<h2 class="dialog-title">${esc(stationName(station))}</h2>
   <div class="dialog-sub">${finite(station.altitude)?`${fmt(station.altitude,0)} m · `:""}${esc(station.source||"")}<br>${measured?`Misura delle ${clock(measured)}${isStale(station)?" · dato non recente":""}`:station.updatedText?`Aggiornamento: ${esc(station.updatedText)}`:"Ora della misura non disponibile"}</div>
-  ${detailRows(rows)}`;
+  ${detailRows(rows)}${sourceLink}`;
 }
 
 function weatherData(period){

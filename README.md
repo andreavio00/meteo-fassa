@@ -229,9 +229,8 @@ presentazione, senza eliminare le stazioni dall'Aggregator:
 - `fassa:coldeirossi` non viene mostrata nella zona Sella e Sassolungo
 - `predazzo:passofeudo` non viene mostrata nella zona Moena e Latemar
 
-Il nome della stazione `trentino:campitello` viene presentato come **Val Duron
-– Malga do Col d'Aura** tramite un override frontend, in attesa di uniformare
-eventualmente il nome anche nel Worker.
+La stazione MeteoTrentino `trentino:campitello` viene presentata direttamente
+dal Worker come **Val Duron – Malga do Col d’Aura**.
 
 Ogni zona mostra quattro stazioni osservate. I punti previsionali disponibili
 restano invece quelli effettivamente forniti dall'Aggregator: 4 per Catinaccio,
@@ -243,6 +242,11 @@ disponibili. Il tocco su una scheda apre i dati di dettaglio.
 Il frontend preserva i valori `null`, distingue pioggia istantanea e accumulo e
 segnala i dati osservati più vecchi di 60 minuti quando è disponibile il
 timestamp della misura.
+
+L'Aggregator delle stazioni espone inoltre `sourceUrl`, collegamento alla
+pagina pubblica della fonte. Nel dettaglio di ogni stazione il frontend mostra
+il pulsante **Apri il sito della fonte**, come già avviene per le stazioni della
+home di Pozza.
 
 Sopra **Condizioni osservate**, la dicitura **Dati raccolti alle HH:MM** usa
 esclusivamente `generated_at` dell'Aggregator delle stazioni. Indica quando il
@@ -321,11 +325,12 @@ Sono i Worker a occuparsi di:
 - stazioni in quota lette dagli endpoint di zona dell'Aggregator
 - previsioni escursioni limitate alle fasce 08–20
 
-### Da verificare prima della pubblicazione
+### Prossimi sviluppi
 
 - resa e leggibilità su telefoni di dimensioni diverse
 - eventuali ulteriori esclusioni o riordini di stazioni e punti previsionali
-- rinomina di `trentino:campitello` direttamente nel Worker
+- service worker, manifest e icone per rendere il sito installabile come web app
+- pagina per richiedere la previsione di una località scelta dall'utente e consultare insieme tutte le stazioni
 - pulizia progressiva del vecchio codice escursioni rimasto in `app.js`
 
 ---

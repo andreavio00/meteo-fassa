@@ -1,9 +1,6 @@
 window.METEO_FASSA_TRIPS={
  stationsUrl:"https://gite-meteo-aggregator.andrea-vio.workers.dev/",
  forecastUrl:"https://gite-previsioni-aggregator.andrea-vio.workers.dev",
- stationNameOverrides:{
-  "trentino:campitello":"Val Duron – Malga do Col d’Aura"
- },
  zones:{
   catinaccio:{
    name:"Catinaccio",icon:"⛰️",stationZoneId:"catinaccio",forecastId:"catinaccio",excludeStations:[]
