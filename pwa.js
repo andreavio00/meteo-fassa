@@ -26,7 +26,10 @@
   });
 
   window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./sw.js",{scope:"./"})
+    navigator.serviceWorker.register("./sw.js",{
+      scope:"./",
+      updateViaCache:"none"
+    })
       .then(registration=>registration.update())
       .catch(error=>console.warn("Service worker non disponibile",error));
   });
