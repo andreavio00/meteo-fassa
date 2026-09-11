@@ -8,7 +8,7 @@
 }
 body{
  min-height:100vh;
- background:linear-gradient(180deg,var(--zone-soft) 0,#edf4f1 34%,#f7f4ec 100%);
+ background:linear-gradient(180deg,var(--zone-soft) 0,#e1f1f8 34%,#f4f9fc 100%);
  transition:background .2s
 }
 html{scroll-behavior:smooth;scroll-padding-top:8px}
