@@ -1,18 +1,18 @@
 :root{
- --bg:#e4f1f8;
+ --bg:#eef2f0;
  --card-bg:#fff;
  --ink:#1d2935;
  --ink-soft:#69757e;
  --line:#e7ebed;
- --accent:#397995;
- --chip-bg:#edf4f8;
+ --accent:#4a6670;
+ --chip-bg:#eef1f2;
  --grad-cold:#4f83c9;
  --grad-mid:#5aa66a;
  --grad-hot:#cf5a44;
  --unknown:#adb5ba;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:linear-gradient(180deg,#d8edf7 0,var(--bg) 42%,#f6fafc 100%) fixed;color:var(--ink)}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
 .page{width:min(calc(100% - 14px),1050px);margin:auto;padding:12px 0 28px}
 
 .page-header{text-align:center;margin-bottom:14px}
@@ -224,9 +224,9 @@ details[open] .summary-arrow{transform:rotate(180deg)}
 .trip-launcher{
  margin-top:9px;
  padding:13px;
- border:1px solid #cfdfe7;
+ border:1px solid #d8e1de;
  border-radius:16px;
- background:linear-gradient(135deg,#ffffff 0,#f1f8fb 100%);
+ background:linear-gradient(135deg,#ffffff 0,#f3f7f4 100%);
  box-shadow:0 2px 10px rgba(20,40,60,.07)
 }
 .trip-launcher-head{display:flex;align-items:center;gap:9px;margin-bottom:11px}

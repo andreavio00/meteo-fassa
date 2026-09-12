@@ -1,13 +1,13 @@
 {
   "id": "./",
-  "name": "Meteo Fassa",
-  "short_name": "Meteo Fassa",
+  "name": "PozzaLive",
+  "short_name": "PozzaLive",
   "description": "Condizioni osservate e previsioni per Pozza e le escursioni in Val di Fassa.",
   "lang": "it",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#e4f1f8",
+  "background_color": "#eef2f0",
   "theme_color": "#4f91b8",
   "categories": ["weather", "travel"],
   "icons": [
