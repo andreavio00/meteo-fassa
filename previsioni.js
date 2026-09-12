@@ -53,7 +53,10 @@ function localNow(timeZone="Europe/Rome"){
   return new Intl.DateTimeFormat("sv-SE",{
    timeZone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"
   }).format(new Date()).replace(" ","T");
- }catch{return localNow("Europe/Rome");}
+ }catch{
+  if(timeZone!=="Europe/Rome")return localNow("Europe/Rome");
+  return new Date().toISOString().slice(0,16);
+ }
 }
 
 function dayLabel(dateIso,timeZone="Europe/Rome"){
@@ -261,8 +264,17 @@ function periodCard(period,index){
  </button>`;
 }
 
+function visibleForecastPeriods(payload=forecastPayload){
+ const place=payload?.location||{};
+ const now=localNow(place.timezone||"Europe/Rome");
+ return (place.periods_3h||[]).filter(period=>{
+  const end=String(period?.end||"").slice(0,16);
+  return Boolean(end)&&end>now;
+ });
+}
+
 function availableDates(){
- return [...new Set((forecastPayload?.location?.periods_3h||[]).map(period=>period.date).filter(Boolean))].sort();
+ return [...new Set(visibleForecastPeriods().map(period=>period.date).filter(Boolean))].sort();
 }
 
 function chooseInitialDate(){
@@ -286,7 +298,7 @@ function renderForecastDays(){
 }
 
 function renderForecastPeriods(){
- const all=forecastPayload?.location?.periods_3h||[];
+ const all=visibleForecastPeriods();
  const periods=all.filter(period=>period.date===selectedDate);
  const box=$("#request-period-grid");
  box.innerHTML=periods.length?periods.map(periodCard).join(""):'<div class="request-period-empty">Nessuna fascia completa disponibile per questo giorno.</div>';
@@ -348,8 +360,8 @@ async function loadForecast(item,button){
   const url=new URL(workerUrl("/forecast"));
   url.searchParams.set("id",item.id);
   const payload=await fetchJson(url.toString(),{signal:forecastController.signal});
-  if(!Array.isArray(payload?.location?.periods_3h)||!payload.location.periods_3h.length){
-   throw new Error("La fonte non ha restituito fasce di previsione complete.");
+  if(!visibleForecastPeriods(payload).length){
+   throw new Error("La fonte non ha restituito fasce attuali o future complete.");
   }
   renderForecast(payload);
   loading.hidden=true;

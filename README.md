@@ -385,16 +385,16 @@ cache applicativa dopo l'aggiornamento.
 - PWA installabile con manifest, icone dedicate e scorciatoie per Pozza ed escursioni
 - service worker limitato ai file del sito, con navigazione offline e aggiornamento dalla rete
 - cache dei dati meteo ancora gestita dal frontend, senza duplicarla nel service worker
-- pagina delle previsioni su richiesta pronta localmente e ancora non pubblicata
+- pagina delle previsioni su richiesta verificata con Meteo.report e Open-Meteo
 - ricerca esplicita, scelta delle omonimie e visualizzazione a fasce di tre ore
+- esclusione automatica delle fasce già concluse, con mantenimento della fascia in corso
+- palette dedicata in grigio caldo e verde tenue, con azzurro riservato a pioggia e Open-Meteo
 - elenco completo delle stazioni caricato solo su apertura della sezione
 
 ### Prossimi sviluppi
 
 - resa e leggibilità su telefoni di dimensioni diverse
 - eventuali ulteriori esclusioni o riordini di stazioni e punti previsionali
-- distribuzione e verifica pubblica del nuovo Worker delle previsioni su richiesta
-- pubblicazione coordinata della nuova pagina dopo il collaudo del Worker
 - pulizia progressiva del vecchio codice escursioni rimasto in `app.js`
 
 ---
