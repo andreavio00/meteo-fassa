@@ -1,19 +1,22 @@
-const CACHE_NAME="meteo-fassa-pwa-v3";
+const CACHE_NAME="meteo-fassa-pwa-v4";
 const APP_SHELL=[
   "./",
   "./index.html",
   "./escursioni.html",
+  "./previsioni.html",
   "./offline.html",
   "./manifest.webmanifest",
   "./style.css",
   "./stations-ui.css",
   "./forecast-ui.css",
   "./escursioni.css",
+  "./previsioni.css",
   "./trip-config.js",
   "./stations-ui.js",
   "./app.js",
   "./forecast-ui.js",
   "./escursioni.js",
+  "./previsioni.js",
   "./pwa.js",
   "./icons/favicon-64.png",
   "./icons/apple-touch-icon.png",
@@ -75,7 +78,9 @@ self.addEventListener("fetch",event=>{
   if(request.mode==="navigate"){
     const fallback=url.pathname.endsWith("/escursioni.html")
       ?"./escursioni.html"
-      :"./index.html";
+      :url.pathname.endsWith("/previsioni.html")
+        ?"./previsioni.html"
+        :"./index.html";
     event.respondWith(networkFirst(request,fallback));
     return;
   }

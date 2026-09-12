@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#397995">
+<meta name="description" content="Cerca una località delle Dolomiti o dell'Euregio e consulta la previsione meteo a fasce di tre ore.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PozzaLive">
+<title>Previsioni su richiesta — PozzaLive</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon-64.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./previsioni.css">
+<script>
+window.addEventListener("load",()=>setTimeout(()=>{
+ const styles=getComputedStyle(document.documentElement);
+ const ready=styles.getPropertyValue("--ink").trim()&&styles.getPropertyValue("--request-ui-ready").trim();
+ const key=`meteo-fassa-style-retry:${location.pathname}`;
+ try{
+  if(!ready&&sessionStorage.getItem(key)!=="1"){sessionStorage.setItem(key,"1");location.reload();}
+  else if(ready)sessionStorage.removeItem(key);
+ }catch{}
+},250));
+</script>
+</head>
+<body>
+<main class="request-page">
+ <header class="request-header">
+  <div class="request-header-actions">
+   <a href="./index.html" class="request-back"><span aria-hidden="true">←</span> Pozza live</a>
+   <a href="./escursioni.html" class="request-hikes">Le escursioni <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="request-title-row">
+   <span class="request-title-icon" aria-hidden="true">🔎</span>
+   <div><div class="eyebrow">Dolomiti + Euregio</div><h1>Previsioni su richiesta</h1></div>
+  </div>
+  <p>Cerca un comune, un passo, un rifugio o un’altra località. Se esistono omonimie, scegli il risultato corretto.</p>
+ </header>
+
+ <section class="request-panel search-panel" aria-labelledby="search-title">
+  <div class="request-section-title">
+   <div><span>UNA LOCALITÀ ALLA VOLTA</span><h2 id="search-title">Dove vuoi andare?</h2></div>
+   <small>Nessun dato viene caricato prima della ricerca</small>
+  </div>
+  <form id="place-search" class="place-search" role="search">
+   <label for="place-query">Località</label>
+   <div class="place-search-row">
+    <input id="place-query" name="q" type="search" minlength="2" maxlength="100" autocomplete="off" enterkeyhint="search" placeholder="Es. Rifugio Vajolet" required>
+    <button id="place-search-button" type="submit"><span aria-hidden="true">🔎</span> Cerca</button>
+   </div>
+  </form>
+  <div class="search-examples" aria-label="Esempi di ricerca">
+   <span>Prova:</span>
+   <button type="button" data-example="Pozza di Fassa">Pozza di Fassa</button>
+   <button type="button" data-example="Rifugio Vajolet">Rifugio Vajolet</button>
+   <button type="button" data-example="Cortina d'Ampezzo">Cortina d’Ampezzo</button>
+  </div>
+  <div id="search-status" class="request-status" role="status" aria-live="polite"></div>
+  <div id="search-results-wrap" hidden>
+   <h3 class="results-heading">Scegli la località corretta</h3>
+   <div id="search-results" class="search-results"></div>
+   <div id="search-attributions" class="request-attributions"></div>
+  </div>
+ </section>
+
+ <section id="requested-forecast" class="request-panel requested-forecast" aria-labelledby="requested-forecast-title" hidden>
+  <div id="forecast-loading" class="forecast-loading" hidden>
+   <span class="loading-spinner" aria-hidden="true"></span>
+   <strong>Preparo la previsione…</strong>
+  </div>
+  <div id="forecast-error" class="request-status error" role="alert" hidden></div>
+  <div id="forecast-content" hidden>
+   <div class="forecast-place-head">
+    <div>
+     <span id="forecast-kind" class="place-kind"></span>
+     <h2 id="requested-forecast-title"></h2>
+     <p id="forecast-context"></p>
+    </div>
+    <div id="forecast-elevation" class="forecast-elevation"></div>
+   </div>
+   <div id="forecast-reference" class="forecast-reference" hidden></div>
+   <div id="forecast-fallback" class="fallback-notice" hidden></div>
+   <div class="forecast-source-row">
+    <span id="forecast-source" class="forecast-source"></span>
+    <small id="forecast-updated"></small>
+   </div>
+   <div class="forecast-control-label">Giorno</div>
+   <div id="request-day-tabs" class="request-day-tabs" role="tablist" aria-label="Giorni di previsione"></div>
+   <div id="request-period-grid" class="request-period-grid" aria-live="polite"></div>
+   <div id="forecast-attributions" class="request-attributions"></div>
+  </div>
+ </section>
+
+ <details id="all-stations" class="all-stations">
+  <summary>
+   <span class="stations-summary-main"><span aria-hidden="true">📡</span><span><strong>Tutte le stazioni disponibili</strong><small>Dati realmente misurati nelle quattro zone</small></span></span>
+   <span class="summary-arrow" aria-hidden="true">▼</span>
+  </summary>
+  <div class="all-stations-content">
+   <div id="stations-status" class="request-status" role="status" aria-live="polite"></div>
+   <div id="station-filter-wrap" class="station-filter-wrap" hidden>
+    <label for="station-filter">Filtra le stazioni</label>
+    <input id="station-filter" type="search" autocomplete="off" placeholder="Nome, zona o rete">
+   </div>
+   <div id="all-stations-grid" class="all-stations-grid"></div>
+   <p class="stations-note">Le osservazioni descrivono le condizioni nel punto della stazione, non nella località cercata.</p>
+  </div>
+ </details>
+
+ <p class="request-note">Le previsioni in montagna possono cambiare rapidamente e descrivono un punto modello. Verifica sempre anche bollettini e condizioni locali prima di partire.</p>
+</main>
+
+<dialog id="request-dialog">
+ <button id="request-dialog-close" class="request-dialog-close" type="button" aria-label="Chiudi">✕</button>
+ <div id="request-dialog-body"></div>
+</dialog>
+
+<script src="./trip-config.js"></script>
+<script src="./previsioni.js"></script>
+<script src="./pwa.js"></script>
+</body>
+</html>

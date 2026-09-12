@@ -19,3 +19,8 @@ window.METEO_FASSA_TRIPS={
   }
  }
 };
+
+window.METEO_FASSA_ON_DEMAND={
+ workerUrl:"https://meteo-fassa-previsioni-richiesta.andrea-vio.workers.dev",
+ stationsUrl:"https://gite-meteo-aggregator.andrea-vio.workers.dev"
+};

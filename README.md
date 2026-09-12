@@ -6,11 +6,12 @@ Pagina pubblica:
 
 `https://andreavio00.github.io/meteo-fassa/`
 
-Il progetto è attualmente organizzato in tre aree principali:
+Il progetto è attualmente organizzato in quattro aree principali:
 
 1. **Pozza Live / stazioni di riferimento**
 2. **Previsioni per San Giovanni di Fassa**
-3. **Meteo per le escursioni**, ancora da completare e razionalizzare
+3. **Meteo per le escursioni**
+4. **Previsioni su richiesta**, pronte localmente e non ancora pubblicate
 
 ---
 
@@ -193,6 +194,9 @@ trip-config.js
 escursioni.html
 escursioni.css
 escursioni.js
+previsioni.html
+previsioni.css
+previsioni.js
 manifest.webmanifest
 sw.js
 pwa.js
@@ -281,7 +285,37 @@ Il rosso è riservato a condizioni più importanti (severità almeno 90, almeno
 
 ---
 
-## 7. Architettura desiderata
+## 7. Previsioni su richiesta
+
+La pagina `previsioni.html` permette di cercare una località nell'area
+Dolomiti + Euregio, scegliere fra eventuali omonimie e richiedere la sola
+previsione selezionata. Il frontend non effettua chiamate all'apertura della
+pagina:
+
+- `/search` parte soltanto con **Cerca** o Invio;
+- `/forecast` parte soltanto dopo la scelta di un risultato;
+- l'elenco completo delle stazioni viene caricato soltanto aprendo la relativa
+  sezione.
+
+Il Worker dedicato configurato in `trip-config.js` è:
+
+`https://meteo-fassa-previsioni-richiesta.andrea-vio.workers.dev`
+
+Le previsioni mostrano fino a tre giorni nelle fasce `08–11`, `11–14`,
+`14–17` e `17–20`. La pagina indica la fonte effettiva, l'eventuale comune
+Meteo.report associato e l'attivazione del fallback Open-Meteo/ICON-D2.
+
+Il pannello **Tutte le stazioni disponibili** continua invece a leggere
+`gite-meteo-aggregator`, senza duplicare nel nuovo Worker il contratto delle
+stazioni. Gli ultimi dati validi di questo pannello vengono conservati sul
+dispositivo per un massimo di 6 ore.
+
+La pagina e il collegamento dalla home sono pronti nel repository locale, ma
+non vanno pubblicati prima della distribuzione del nuovo Worker.
+
+---
+
+## 8. Architettura desiderata
 
 L'idea generale del progetto è mantenere il frontend leggero:
 
@@ -307,14 +341,14 @@ Sono i Worker a occuparsi di:
 
 ---
 
-## 8. Progressive Web App
+## 9. Progressive Web App
 
 Il sito è installabile come PWA da Android e dagli altri browser compatibili.
-`manifest.webmanifest` definisce nome, colori, icone, pagina iniziale e due
-scorciatoie: **Pozza Live** e **Le escursioni**. Quando il browser lo consente,
+`manifest.webmanifest` definisce nome, colori, icone, pagina iniziale e tre
+scorciatoie: **Pozza Live**, **Le escursioni** e **Cerca una località**. Quando il browser lo consente,
 nella home compare anche il pulsante **Installa app**.
 
-`sw.js` conserva i file essenziali delle due pagine e permette di riaprirle
+`sw.js` conserva i file essenziali delle tre pagine e permette di riaprirle
 anche senza rete. Le richieste ai Worker meteo non vengono intercettate dal
 service worker: gli ultimi JSON validi continuano a essere gestiti dalle cache
 `localStorage` già previste dal frontend. In questo modo un valore vecchio non
@@ -326,7 +360,7 @@ cache applicativa dopo l'aggiornamento.
 
 ---
 
-## 9. Stato del progetto – 11 settembre 2026
+## 10. Stato del progetto – 12 settembre 2026
 
 ### Funzionante
 
@@ -351,17 +385,21 @@ cache applicativa dopo l'aggiornamento.
 - PWA installabile con manifest, icone dedicate e scorciatoie per Pozza ed escursioni
 - service worker limitato ai file del sito, con navigazione offline e aggiornamento dalla rete
 - cache dei dati meteo ancora gestita dal frontend, senza duplicarla nel service worker
+- pagina delle previsioni su richiesta pronta localmente e ancora non pubblicata
+- ricerca esplicita, scelta delle omonimie e visualizzazione a fasce di tre ore
+- elenco completo delle stazioni caricato solo su apertura della sezione
 
 ### Prossimi sviluppi
 
 - resa e leggibilità su telefoni di dimensioni diverse
 - eventuali ulteriori esclusioni o riordini di stazioni e punti previsionali
-- pagina per richiedere la previsione di una località scelta dall'utente e consultare insieme tutte le stazioni
+- distribuzione e verifica pubblica del nuovo Worker delle previsioni su richiesta
+- pubblicazione coordinata della nuova pagina dopo il collaudo del Worker
 - pulizia progressiva del vecchio codice escursioni rimasto in `app.js`
 
 ---
 
-## 10. Repository
+## 11. Repository
 
 Frontend / GitHub Pages:
 

@@ -2,7 +2,7 @@
   "id": "./",
   "name": "PozzaLive",
   "short_name": "PozzaLive",
-  "description": "Condizioni osservate e previsioni per Pozza e le escursioni in Val di Fassa.",
+  "description": "Condizioni osservate e previsioni per Pozza, le escursioni e località scelte dall'utente.",
   "lang": "it",
   "start_url": "./",
   "scope": "./",
@@ -49,6 +49,19 @@
       "short_name": "Escursioni",
       "description": "Condizioni osservate e previsioni in quota",
       "url": "./escursioni.html",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Cerca una località",
+      "short_name": "Cerca meteo",
+      "description": "Previsioni su richiesta nelle Dolomiti e nell'Euregio",
+      "url": "./previsioni.html",
       "icons": [
         {
           "src": "./icons/icon-192.png",
