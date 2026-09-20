@@ -1,4 +1,4 @@
-const CACHE_NAME="meteo-fassa-pwa-v5";
+const CACHE_NAME="meteo-fassa-pwa-v9";
 const APP_SHELL=[
   "./",
   "./index.html",

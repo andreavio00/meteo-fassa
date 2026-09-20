@@ -40,10 +40,26 @@ window.addEventListener("load",()=>setTimeout(()=>{
 <section class="main-stations" aria-label="Stazioni intorno a Pozza di Fassa">
 <div class="main-stations-track">
 <div id="hero-station" class="main-station-slot"></div>
-<div id="pozza-amateur" class="main-station-slot"></div>
+<div class="main-station-slot pozza-amateur-group-slot">
+<section class="pozza-amateur-group" aria-labelledby="pozza-amateur-heading">
+<header class="pozza-amateur-group-head">
+<span class="pozza-amateur-group-icon" aria-hidden="true">📡</span>
+<span class="pozza-amateur-group-copy">
+<strong id="pozza-amateur-heading">Amatoriali</strong>
+<small>Dati indicativi</small>
+</span>
+<span class="pozza-amateur-group-badge">NON UFFICIALI</span>
+</header>
+<div class="pozza-amateur-grid">
+<div id="pozza-amateur" class="pozza-amateur-item"></div>
+<div id="pozza-weathercloud" class="pozza-amateur-item"></div>
+<div id="pozza-netatmo" class="pozza-amateur-item"></div>
+</div>
+</section>
+</div>
 <div id="compact-stations" class="main-station-tail"></div>
 </div>
-<div class="station-swipe-hint" aria-hidden="true">Scorri per Monzon e Moena →</div>
+<div class="station-swipe-hint" aria-hidden="true">Scorri tutte le stazioni →</div>
 </section>
 
 <section class="forecast-section">

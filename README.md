@@ -17,11 +17,13 @@ Il progetto è attualmente organizzato in quattro aree principali:
 
 ## 1. Stazioni di riferimento
 
-Il frontend legge i dati da un unico Cloudflare Worker:
+Il frontend legge le stazioni di riferimento dal Worker principale:
 
 `https://meteopozza-stazioni.andrea-vio.workers.dev/`
 
-Il Worker restituisce un JSON unico contenente le stazioni principali.
+Il Worker restituisce Vigo, Monzon, Moena e la rilevazione FassaWEB. Le altre
+due stazioni amatoriali di Pozza vengono richieste separatamente al Worker
+`meteopozza-amatoriali`, così non rallentano il caricamento delle ufficiali.
 
 ### Vigo di Fassa
 
@@ -59,7 +61,34 @@ Il Worker legge direttamente la pagina HTML ed estrae tramite regex:
 - variazione della pressione nelle 3 ore
 - orario di aggiornamento
 
-Nel frontend Pozza viene quindi mostrata con una card più piccola, bordo rosso e dicitura **“Stazione amatoriale · dati non ufficiali”**, per distinguerla chiaramente dalle altre stazioni.
+Nel frontend le tre fonti sono raccolte in un'unica scheda bianca con tre righe
+compatte, larga quanto una normale scheda ufficiale. Nella vista sintetica i
+nomi diventano **Mozart**, **Camping** e **Le Giare**; il dettaglio conserva i
+nomi completi. Sul telefono ogni riga mostra soltanto la temperatura, mentre
+umidità e altri parametri restano nel dettaglio. In questo modo Vigo e il gruppo
+amatoriale sono visibili insieme. La distinzione dalle stazioni ufficiali è
+affidata alla dicitura **“Non ufficiali”**, al bordo e a un sottile segno
+laterale, senza uno sfondo colorato.
+
+Le coordinate del sensore FassaWEB non sono pubblicate. La sua posizione viene
+quindi mostrata esplicitamente come **stimata presso Hotel Villa Mozart**
+(`46.42519 N, 11.68314 E`), perché la webcam FassaWEB di Pozza dichiara quella
+struttura come punto di ripresa. Le coordinate di CEP e Netatmo arrivano invece
+dal Worker dedicato.
+
+### Camping Catinaccio e Zona Le Giare
+
+Worker dedicato:
+
+`https://meteopozza-amatoriali.andrea-vio.workers.dev/stations`
+
+Sorgenti:
+
+- WeatherCloud, stazione visualizzata come Camping Catinaccio
+- Netatmo WeatherMap, stazione visualizzata come Zona Le Giare
+
+Il dettaglio di entrambe mostra anche una riga **Temperatura** esplicita, le
+coordinate e il collegamento alla posizione su OpenStreetMap.
 
 Per vedere direttamente l'HTML ricevuto dal Worker:
 
@@ -207,8 +236,8 @@ icons/
 In sintesi:
 
 - `app.js` contiene la logica principale della pagina
-- `stations-ui.js` aggiunge cache locale e gestione specifica della card di Pozza
-- `stations-ui.css` contiene lo stile aggiuntivo delle stazioni, soprattutto Pozza
+- `stations-ui.js` aggiunge cache locale e gestisce il gruppo delle tre stazioni amatoriali di Pozza
+- `stations-ui.css` contiene la lista compatta e lo stile neutro del gruppo amatoriale
 - `forecast-ui.js` e `forecast-ui.css` rifiniscono la visualizzazione delle previsioni senza appesantire ulteriormente `app.js`
 
 ---
@@ -376,8 +405,8 @@ cache applicativa dopo l'aggiornamento.
 - cache locale browser
 - previsioni San Giovanni di Fassa da meteo.report
 - interfaccia previsioni giornaliere e triorarie
-- home compatta con quattro stazioni scorrevoli su mobile
-- card amatoriale di Pozza più piccola e arrotondata, per darle un peso visivo secondario
+- home compatta con le stazioni scorrevoli su mobile
+- gruppo amatoriale in un'unica scheda a tre righe, con peso visivo secondario
 - pagina escursioni separata con quattro zone
 - testata escursioni compatta con accessi evidenti a Pozza Live e alle previsioni 08–20
 - stazioni in quota lette dagli endpoint di zona dell'Aggregator
