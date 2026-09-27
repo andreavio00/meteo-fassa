@@ -1,7 +1,8 @@
-const CACHE_NAME="meteo-fassa-pwa-v9";
+const CACHE_NAME="meteo-fassa-pwa-v10";
 const APP_SHELL=[
   "./",
   "./index.html",
+  "./moena.html",
   "./escursioni.html",
   "./previsioni.html",
   "./offline.html",
@@ -9,12 +10,14 @@ const APP_SHELL=[
   "./style.css",
   "./stations-ui.css",
   "./forecast-ui.css",
+  "./moena.css",
   "./escursioni.css",
   "./previsioni.css",
   "./trip-config.js",
   "./stations-ui.js",
   "./app.js",
   "./forecast-ui.js",
+  "./moena.js",
   "./escursioni.js",
   "./previsioni.js",
   "./pwa.js",
@@ -80,7 +83,9 @@ self.addEventListener("fetch",event=>{
       ?"./escursioni.html"
       :url.pathname.endsWith("/previsioni.html")
         ?"./previsioni.html"
-        :"./index.html";
+        :url.pathname.endsWith("/moena.html")
+          ?"./moena.html"
+          :"./index.html";
     event.respondWith(networkFirst(request,fallback));
     return;
   }

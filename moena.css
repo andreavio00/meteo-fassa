@@ -1,0 +1,135 @@
+:root{
+ --moena-forest:#5f735d;
+ --moena-forest-dark:#3f5641;
+ --moena-sage:#e7ede4;
+ --moena-sand:#d4b16f;
+ --moena-cream:#fffdf8;
+ --moena-bg:#f1eee6;
+}
+.moena-body{background:linear-gradient(180deg,#e8ece4 0,#f1eee6 210px,#f1eee6 100%)}
+.moena-page{max-width:980px;padding-top:18px}
+.moena-header{margin-bottom:17px}
+.moena-header h1{color:#263b2c}
+.moena-header p{margin:0 auto 8px;color:#687266;font-size:11px}
+.moena-header .worker-status{background:#e4e9df;color:#50604e}
+.moena-header .worker-status.ok{background:#dfeadd;color:#38533d}
+.moena-header .worker-status.error{background:#f3e4df;color:#824537}
+
+.moena-stations,.moena-amateurs{
+ background:rgba(255,253,248,.74);border:1px solid #dedbd0;border-radius:18px;
+ padding:13px;box-shadow:0 3px 13px rgba(53,63,45,.07)
+}
+.moena-section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 2px 11px}
+.moena-section-heading span{display:block;font-size:9px;font-weight:850;letter-spacing:.08em;color:#71806d}
+.moena-section-heading h2{margin:2px 0 0;font-size:17px;color:#304234}
+.moena-section-heading small{font-size:9px;color:var(--ink-soft);text-align:right}
+.moena-loading-card{min-height:90px;display:grid;place-items:center;color:var(--ink-soft);font-size:11px}
+
+.moena-card{position:relative;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;background:var(--moena-cream)}
+.moena-card:hover,.moena-card:focus-visible{transform:translateY(-1px);box-shadow:0 6px 17px rgba(55,70,50,.13);border-color:#a9b5a4;outline:none}
+.moena-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.moena-card-title{display:flex;gap:9px;min-width:0;align-items:flex-start}
+.moena-card-icon{font-size:22px;line-height:1.05}
+.moena-card-title strong{display:block;font-size:16px;line-height:1.15;color:#2d3c30}
+.moena-card-title small{display:block;margin-top:3px;color:var(--ink-soft);font-size:10px}
+.moena-station-badge{flex:0 0 auto;padding:5px 7px;border-radius:999px;font-size:8px;line-height:1;font-weight:900;letter-spacing:.04em;white-space:nowrap;background:#ede8dc;color:#7a6336;border:1px solid #ddccaa}
+.moena-station-badge.reference{background:#e8eee6;color:#52684f;border-color:#cad7c6}
+.moena-official-card{padding:15px 16px;border-left:4px solid var(--moena-sand);background:linear-gradient(120deg,#fffdf8,#fbf6ea)}
+.moena-official-reading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:17px 0 13px}
+.moena-temperature{font-size:44px;line-height:.92;font-weight:850;letter-spacing:-1.5px;color:#26382b}
+.moena-temperature small{font-size:17px;font-weight:700;letter-spacing:0;color:#6a7568}
+.moena-station-time{text-align:right;color:#667063;font-size:9px;line-height:1.3}
+.moena-station-time strong{display:block;font-size:11px;color:#405143}
+.moena-quick-metrics{display:flex;flex-wrap:wrap;gap:7px}
+.moena-metric-pill{display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:10px;background:#f1eee5;color:#61705e;font-size:9px}
+.moena-metric-pill strong{color:#354638;font-size:11px}
+.moena-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;padding-top:9px;border-top:1px solid #e8e4da;color:#707a6e;font-size:9px}
+.moena-freshness{display:flex;align-items:center;gap:5px;min-width:0}
+.moena-freshness-dot{width:8px;height:8px;border-radius:50%;background:#8c9789;flex:0 0 auto}
+.moena-freshness.fresh .moena-freshness-dot{background:#5d9465}
+.moena-freshness.warning .moena-freshness-dot{background:#c69a43}
+.moena-freshness.old .moena-freshness-dot,.moena-freshness.offline .moena-freshness-dot{background:#b65b4b}
+.moena-detail-cue{font-weight:800;color:#627760;white-space:nowrap}
+
+.moena-reference-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.moena-reference-card{padding:13px}
+.moena-reference-card .moena-card-title strong{font-size:14px}
+.moena-reference-card .moena-card-icon{font-size:19px}
+.moena-reference-main{display:flex;align-items:baseline;gap:13px;margin:13px 0 10px}
+.moena-reference-main .moena-temperature{font-size:31px;letter-spacing:-.7px}
+.moena-reference-humidity{font-size:15px;font-weight:750;color:#6a7568}
+.moena-reference-card .moena-quick-metrics{gap:5px}
+.moena-reference-card .moena-metric-pill{padding:6px 7px}
+
+.moena-amateurs{margin-top:9px;border-left:3px solid #a69b84;background:rgba(255,253,248,.66)}
+.moena-amateur-heading{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.moena-amateur-heading>div{display:flex;align-items:center;gap:8px;min-width:0}
+.moena-amateur-heading>div>span:last-child{display:flex;flex-direction:column;gap:1px}
+.moena-amateur-heading strong{font-size:14px;color:#3e443c}
+.moena-amateur-heading small{font-size:9px;color:var(--ink-soft)}
+.moena-amateur-icon{font-size:21px}
+.moena-amateur-badge{padding:4px 7px;border:1px solid #c9c2b3;border-radius:999px;color:#716958;background:#f2efe8;font-size:8px;font-weight:900;white-space:nowrap}
+.moena-amateur-note{margin:9px 1px 10px;font-size:9px;line-height:1.4;color:#777a70}
+.moena-amateur-track{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 9px;scroll-snap-type:x proximity;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.moena-amateur-card{flex:0 0 156px;min-height:112px;padding:10px;border:1px solid #d8d3c8;border-radius:13px;background:#fffdf9;scroll-snap-align:start;cursor:pointer;transition:transform .15s,border-color .15s;display:flex;flex-direction:column}
+.moena-amateur-card:hover,.moena-amateur-card:focus-visible{transform:translateY(-1px);border-color:#9eaa9a;outline:none}
+.moena-amateur-card.is-loading{color:var(--ink-soft);font-size:10px;cursor:default;justify-content:center}
+.moena-amateur-top{display:flex;align-items:flex-start;justify-content:space-between;gap:7px}
+.moena-amateur-title{min-width:0}
+.moena-amateur-title strong{display:block;font-size:12px;line-height:1.15;color:#363c35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.moena-amateur-title small{display:block;margin-top:3px;font-size:8px;color:#817b70;text-transform:uppercase;letter-spacing:.04em}
+.moena-amateur-state{width:8px;height:8px;border-radius:50%;background:#5d9465;flex:0 0 auto;margin-top:2px}
+.moena-amateur-state.warning{background:#c69a43}.moena-amateur-state.offline{background:#b65b4b}
+.moena-amateur-value{font-size:27px;font-weight:850;line-height:1;margin-top:14px;color:#333d34}
+.moena-amateur-humidity{font-size:10px;font-weight:750;color:#6e786b;margin-top:6px}
+.moena-amateur-updated{margin-top:auto;padding-top:8px;font-size:8px;color:#89877f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.moena-swipe-hint{text-align:right;font-size:8px;color:#888478;margin:-3px 3px 0}
+
+.moena-forecast .forecast-details{border-color:#d5d9ce;background:#fffdf9}
+.moena-forecast .forecast-details summary{background:linear-gradient(100deg,#f6f3e9,#edf2e9)}
+.moena-forecast .forecast-tab.active{background:#dde9d9;color:#29402d;border-color:#829a80;box-shadow:0 5px 14px rgba(66,95,64,.15)}
+.moena-forecast .forecast-tab.active .forecast-tab-top,.moena-forecast .forecast-tab.active .forecast-tab-top strong,.moena-forecast .forecast-tab.active .forecast-tab-bottom{color:#29402d}
+.moena-forecast .forecast-item{background:linear-gradient(180deg,#fffdf9,#f5f4ec);border-color:#deddd3}
+.moena-trip-launcher{border-color:#d9d7cb;background:linear-gradient(135deg,#fffdf9,#edf2e9)}
+.moena-request-launcher{border-color:#d4d5c9;background:linear-gradient(110deg,#fffaf0,#e7eee3);color:#405b42}
+
+.moena-modal-head{padding-right:36px;margin-bottom:13px}
+.moena-modal-head h2{margin:0;color:#2e4032;font-size:20px}
+.moena-modal-head p{margin:4px 0 0;color:var(--ink-soft);font-size:10px}
+.moena-modal-temp{font-size:39px;font-weight:850;color:#293b2e;margin:11px 0}
+.moena-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.moena-modal-row{padding:9px 10px;border:1px solid #e2e1d8;border-radius:10px;background:#faf9f4}
+.moena-modal-row span{display:block;margin-bottom:3px;color:#7a8177;font-size:9px}
+.moena-modal-row strong{font-size:12px;color:#354638}
+.moena-coordinate-link,.moena-source-link{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px;border-radius:10px;text-decoration:none;font-size:10px;font-weight:750}
+.moena-coordinate-link{background:#f0f2eb;color:#52664f}.moena-source-link{justify-content:center;background:var(--moena-forest);color:#fff}
+.moena-modal-note{margin-top:10px;padding:9px 10px;border-left:3px solid #c5a968;background:#f8f2e4;color:#746341;font-size:9px;line-height:1.4}
+
+@media(max-width:520px){
+ .moena-page{width:calc(100% - 10px);padding-top:12px}
+ .moena-stations,.moena-amateurs{padding:10px}
+ .moena-section-heading small{display:none}
+ .moena-official-card{padding:13px}
+ .moena-official-card .moena-card-head{display:block}
+ .moena-official-card .moena-station-badge{display:inline-block;margin-top:7px}
+ .moena-official-reading{margin:14px 0 11px}
+ .moena-temperature{font-size:39px}
+ .moena-reference-grid{gap:7px}
+ .moena-reference-card{padding:10px}
+ .moena-reference-card .moena-card-head{display:block}
+ .moena-reference-card .moena-station-badge{display:inline-block;margin-top:6px}
+ .moena-reference-main{gap:8px;margin:11px 0 8px}
+ .moena-reference-main .moena-temperature{font-size:27px}
+ .moena-reference-humidity{font-size:13px}
+ .moena-reference-card .moena-metric-pill{font-size:8px}
+ .moena-reference-card .moena-metric-pill strong{font-size:9px}
+ .moena-reference-card .moena-card-footer{display:block}
+ .moena-reference-card .moena-detail-cue{display:none}
+ .moena-amateur-card{flex-basis:148px}
+}
+@media(max-width:350px){
+ .moena-station-badge{font-size:7px;padding:4px 5px}
+ .moena-reference-main{display:block}
+ .moena-reference-humidity{display:block;margin-top:5px}
+ .moena-modal-grid{grid-template-columns:1fr}
+}

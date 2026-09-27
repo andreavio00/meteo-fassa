@@ -6,12 +6,36 @@ Pagina pubblica:
 
 `https://andreavio00.github.io/meteo-fassa/`
 
-Il progetto è attualmente organizzato in quattro aree principali:
+Il progetto è attualmente organizzato in cinque aree principali:
 
 1. **Pozza Live / stazioni di riferimento**
 2. **Previsioni per San Giovanni di Fassa**
 3. **Meteo per le escursioni**
-4. **Previsioni su richiesta**, pronte localmente e non ancora pubblicate
+4. **Previsioni su richiesta**
+5. **Moena Live**, pagina autonoma con stazioni e previsione dedicate
+
+---
+
+## Moena Live
+
+Pagina diretta:
+
+`https://andreavio00.github.io/meteo-fassa/moena.html`
+
+La pagina rimane per ora autonoma e non è collegata da Pozza Live. Mostra in
+evidenza la stazione ufficiale MeteoTrentino **Moena - Diga di Pezzè**, due
+riferimenti locali (**Moena Meteo** e **Vigo di Fassa**) e sei stazioni
+amatoriali in un elenco orizzontale. Le amatoriali non vengono mediate, perché
+posizione, quota ed esposizione possono produrre valori differenti.
+
+Worker dedicati:
+
+- `https://meteomoena-stazioni.andrea-vio.workers.dev/stations`
+- `https://meteomoena-amatoriali.andrea-vio.workers.dev/stations`
+- `https://meteomoena-previsioni.andrea-vio.workers.dev/forecast`
+
+Escursioni e previsioni su richiesta riutilizzano le pagine comuni; il
+parametro `from=moena` conserva il ritorno a Moena Live.
 
 ---
 

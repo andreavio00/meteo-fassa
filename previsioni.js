@@ -538,6 +538,14 @@ function openDialog(html){
 }
 
 function init(){
+ const params=new URLSearchParams(location.search);
+ if(params.get("from")==="moena"){
+  const back=$(".request-back");
+  const hikes=$(".request-hikes");
+  back.href="./moena.html";
+  back.innerHTML='<span aria-hidden="true">←</span> Moena live';
+  hikes.href="./escursioni.html?zona=moena&from=moena";
+ }
  const form=$("#place-search");
  form.addEventListener("submit",event=>{event.preventDefault();submitSearch();});
  $("#place-query").addEventListener("input",()=>{
@@ -558,7 +566,7 @@ function init(){
   if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();
  });
 
- const prefill=new URLSearchParams(location.search).get("q");
+ const prefill=params.get("q");
  if(prefill)$("#place-query").value=prefill.slice(0,100);
 }
 

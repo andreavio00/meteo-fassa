@@ -476,6 +476,12 @@ async function loadZone(zoneKey){
 }
 
 function init(){
+ const params=new URLSearchParams(location.search);
+ if(params.get("from")==="moena"){
+  const back=$(".back-link");
+  back.href="./moena.html";
+  back.innerHTML='<span aria-hidden="true">←</span> Moena live';
+ }
  $("#hike-zones").innerHTML=Object.entries(CFG.zones).map(([id,zone])=>`<button class="hike-zone" data-zone="${id}" role="tab" aria-selected="false"><span class="hike-zone-icon">${zone.icon}</span><strong>${esc(zone.name)}</strong></button>`).join("");
  $("#hike-zones").querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>loadZone(button.dataset.zone)));
  $(".dialog-close").addEventListener("click",()=>$("#detail-dialog").close());
@@ -484,7 +490,7 @@ function init(){
   const rect=dialog.getBoundingClientRect();
   if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();
  });
- const requested=new URLSearchParams(location.search).get("zona")||"catinaccio";
+ const requested=params.get("zona")||"catinaccio";
  loadZone(requested);
 }
 

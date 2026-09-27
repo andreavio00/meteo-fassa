@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#5f735d">
+<meta name="description" content="Condizioni osservate e previsioni meteo per Moena e la Val di Fassa.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Moena Live — Meteo Val di Fassa</title>
+<link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon-64.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./forecast-ui.css">
+<link rel="stylesheet" href="./moena.css">
+</head>
+<body class="moena-body">
+<main class="page moena-page">
+ <header class="page-header moena-header">
+  <div class="eyebrow">🌲 Val di Fassa</div>
+  <h1><span class="title-icon" aria-hidden="true">🌲</span>Moena live</h1>
+  <p>Condizioni osservate nel paese e previsioni per Moena.</p>
+  <div id="moena-worker-status" class="worker-status" role="status" aria-live="polite">Aggiornamento dati…</div>
+ </header>
+
+ <section class="moena-stations" aria-labelledby="moena-stations-title">
+  <div class="moena-section-heading">
+   <div><span>DATI OSSERVATI</span><h2 id="moena-stations-title">Le stazioni di riferimento</h2></div>
+   <small>Tocca una scheda per tutti i dettagli</small>
+  </div>
+  <div id="moena-official" class="moena-official" aria-live="polite">
+   <article class="station-card moena-loading-card" aria-busy="true">Caricamento della stazione ufficiale…</article>
+  </div>
+  <div id="moena-references" class="moena-reference-grid" aria-live="polite">
+   <article class="station-card moena-loading-card" aria-busy="true">Aggiornamento riferimenti locali…</article>
+  </div>
+ </section>
+
+ <section class="moena-amateurs" aria-labelledby="moena-amateurs-title">
+  <div class="moena-amateur-heading">
+   <div>
+    <span class="moena-amateur-icon" aria-hidden="true">📡</span>
+    <span><strong id="moena-amateurs-title">Stazioni amatoriali</strong><small id="moena-amateur-summary">Sei punti di confronto nel paese</small></span>
+   </div>
+   <span class="moena-amateur-badge">NON UFFICIALI</span>
+  </div>
+  <p class="moena-amateur-note">Posizione, quota ed esposizione possono produrre valori diversi. Le stazioni sono mostrate singolarmente e non viene calcolata una media.</p>
+  <div id="moena-amateur-track" class="moena-amateur-track" aria-live="polite">
+   <article class="moena-amateur-card is-loading" aria-busy="true">Aggiornamento…</article>
+  </div>
+  <div class="moena-swipe-hint" aria-hidden="true">Scorri le stazioni →</div>
+ </section>
+
+ <section class="forecast-section moena-forecast">
+  <details id="forecast-details" class="forecast-details">
+   <summary class="forecast-summary">
+    <span class="forecast-summary-main">
+     <span class="forecast-heading"><strong>Previsioni</strong><small>Moena</small></span>
+     <span id="forecast-preview" class="forecast-preview">Caricamento della prossima fascia…</span>
+    </span>
+    <span class="summary-arrow" aria-hidden="true">▼</span>
+   </summary>
+   <div class="forecast-content">
+    <div id="forecast-status" class="worker-status" role="status" hidden></div>
+    <div id="forecast-tabs" class="forecast-tabs" role="tablist" aria-label="Giorni di previsione"></div>
+    <div id="forecast-day-summary" class="forecast-day-summary"></div>
+    <div id="forecast-grid" class="forecast-grid"></div>
+    <div class="forecast-attribution">Dati previsionali: Meteo.report / GeoSphere Austria · aggiornamento automatico</div>
+   </div>
+  </details>
+ </section>
+
+ <section class="trip-launcher moena-trip-launcher" aria-labelledby="moena-trip-title">
+  <div class="trip-launcher-head">
+   <span class="trip-launcher-icon" aria-hidden="true">🥾</span>
+   <span><strong id="moena-trip-title">Per un’escursione</strong><small>Condizioni in quota dalle 08 alle 20</small></span>
+  </div>
+  <div class="trip-launcher-grid">
+   <a class="trip-launcher-zone zone-moena" href="./escursioni.html?zona=moena&amp;from=moena"><span>🌲</span><strong>Moena e Latemar</strong></a>
+   <a class="trip-launcher-zone zone-catinaccio" href="./escursioni.html?zona=catinaccio&amp;from=moena"><span>⛰️</span><strong>Catinaccio</strong></a>
+   <a class="trip-launcher-zone zone-sella" href="./escursioni.html?zona=sella&amp;from=moena"><span>🪨</span><strong>Sella e Sassolungo</strong></a>
+   <a class="trip-launcher-zone zone-marmolada" href="./escursioni.html?zona=marmolada&amp;from=moena"><span>🏔️</span><strong>Marmolada e Val San Nicolò</strong></a>
+  </div>
+ </section>
+
+ <a class="request-launcher moena-request-launcher" href="./previsioni.html?from=moena">
+  <span class="request-launcher-icon" aria-hidden="true">🔎</span>
+  <span class="request-launcher-copy"><strong>Cerca un’altra località</strong><small>Previsioni su richiesta nelle Dolomiti e nell’Euregio</small></span>
+  <span class="request-launcher-arrow" aria-hidden="true">→</span>
+ </a>
+</main>
+
+<div id="modal-backdrop" class="modal-backdrop" hidden>
+ <div class="modal-sheet" role="dialog" aria-modal="true" aria-label="Dettagli meteo">
+  <button id="modal-close" class="modal-close" type="button" aria-label="Chiudi">✕</button>
+  <div id="modal-body"></div>
+ </div>
+</div>
+
+<script src="./moena.js"></script>
+<script src="./pwa.js"></script>
+</body>
+</html>
