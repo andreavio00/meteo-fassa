@@ -411,19 +411,23 @@ Sono i Worker a occuparsi di:
 
 ## 9. Progressive Web App
 
-Il sito espone due PWA installabili e riconoscibili separatamente:
+Il progetto espone due PWA installabili su origini distinte:
 
-- `manifest.webmanifest` identifica **PozzaLive** e la apre da `index.html`;
-- `moena.webmanifest` identifica **MoenaLive** e la apre da `moena.html`.
+- GitHub Pages espone **PozzaLive** tramite `manifest.webmanifest`;
+- `moenalive.andrea-vio.workers.dev` espone **MoenaLive** tramite
+  `moena.webmanifest` e usa `moena.html` come pagina iniziale.
 
-I due manifest hanno identificativi, nomi, colori, icone e pagine iniziali
-distinti. Quando il browser lo consente, ciascuna home mostra il proprio
-pulsante di installazione. Le scorciatoie per escursioni e previsioni su
-richiesta restano disponibili da entrambe le app.
+La pagina `moena.html` su GitHub Pages non presenta direttamente un manifest:
+il suo pulsante **Apri MoenaLive** conduce all'origine dedicata. Il Worker
+`moenalive` del repository `meteo-fassa-workers` riattiva il manifest sulla
+copia pubblicata e sostituisce le icone generiche con quelle verdi di Moena.
+Questo evita che Chrome consideri Moena una pagina interna della PWA PozzaLive
+già installata.
 
-Le due PWA condividono un solo `sw.js`, così non esistono service worker con
-ambiti sovrapposti. Il service worker conserva i file essenziali delle pagine
-e permette di riaprirle anche senza rete. Le richieste ai Worker meteo non vengono intercettate dal
+Le due PWA usano lo stesso sorgente `sw.js`, ma ciascuna origine mantiene una
+registrazione e una cache indipendenti. Il service worker conserva i file
+essenziali delle pagine e permette di riaprirle anche senza rete. Le richieste
+ai Worker meteo non vengono intercettate dal
 service worker: gli ultimi JSON validi continuano a essere gestiti dalle cache
 `localStorage` già previste dal frontend. In questo modo un valore vecchio non
 viene confuso con una nuova risposta del Worker.
