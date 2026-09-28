@@ -302,9 +302,11 @@ presentazione, senza eliminare le stazioni dall'Aggregator:
 La stazione MeteoTrentino `trentino:campitello` viene presentata direttamente
 dal Worker come **Val Duron – Malga do Col d’Aura**.
 
-Ogni zona mostra quattro stazioni osservate. Nel settore di Moena, **Cima
-Paradiso** viene esplicitata come riferimento del Passo San Pellegrino. I punti
-previsionali disponibili restano invece quelli effettivamente forniti
+Ogni zona mostra quattro stazioni osservate. Nel settore di Moena, il
+riferimento per il San Pellegrino è **Sarcine - Passo San Pellegrino**, stazione
+MeteoNetwork `TRN362` in località Alochet/Sarcine (1800 m); Cima Paradiso non
+viene più associata al passo perché si trova nel settore di Passo Rolle. I
+punti previsionali disponibili restano invece quelli effettivamente forniti
 dall'Aggregator: 4 per Catinaccio, 4 per Sella e Sassolungo, 6 per Marmolada e
 Val San Nicolò e 5 per S. Pellegrino, Rolle e Latemar. Questi ultimi sono Passo
 Costalunga, Passo San Pellegrino, Passo Rolle, Fuciade e Passo Feudo. Per usare

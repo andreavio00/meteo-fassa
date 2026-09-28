@@ -17,9 +17,6 @@ window.METEO_FASSA_TRIPS={
    name:"Moena e Latemar",moenaName:"S. Pellegrino · Rolle · Latemar",icon:"🌲",stationZoneId:"moena_latemar",forecastId:"moena_latemar",
    excludeStations:["predazzo:passofeudo"]
   }
- },
- stationNameOverrides:{
-  "fassa:paradiso":"S. Pellegrino · Cima Paradiso"
  }
 };
 
