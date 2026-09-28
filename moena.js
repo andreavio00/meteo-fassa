@@ -62,11 +62,6 @@ function clock(value){
  if(Number.isNaN(date.getTime()))return "—";
  return new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",hour:"2-digit",minute:"2-digit"}).format(date);
 }
-function dayTime(value){
- const date=value instanceof Date?value:new Date(value);
- if(Number.isNaN(date.getTime()))return "—";
- return new Intl.DateTimeFormat("it-IT",{timeZone:"Europe/Rome",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}).format(date);
-}
 function freshness(station){
  if(!stationHasData(station))return {className:"offline",label:"Dati non disponibili",short:"Non disponibile"};
  const date=timestamp(station);
@@ -86,82 +81,51 @@ function windDirection(station){
  return labels[Math.round((((Number(station.windDirection)%360)+360)%360)/22.5)%16];
 }
 
-function metric(icon,label,value){
- if(!value)return "";
- return `<span class="moena-metric-pill"><span aria-hidden="true">${icon}</span><span>${esc(label)} <strong>${esc(value)}</strong></span></span>`;
-}
-function footer(station){
- const info=freshness(station);
- return `<div class="moena-card-footer"><span class="moena-freshness ${info.className}"><span class="moena-freshness-dot"></span>${esc(info.label)}</span><span class="moena-detail-cue">Dettagli →</span></div>`;
-}
-
-function mainMetrics(station,compact=false){
- const values=[];
- if(finite(station.temperatureMin)||finite(station.temperatureMax))values.push(metric("↕️","Min / max",`${number(station.temperatureMin)}° / ${number(station.temperatureMax)}°`));
- if(finite(station.humidity))values.push(metric("💧","Umidità",`${number(station.humidity,0)}%`));
- if(finite(station.pressure))values.push(metric("◉","Pressione",`${number(station.pressure)} hPa`));
- if(finite(station.rainToday))values.push(metric("☔","Pioggia oggi",`${number(station.rainToday)} mm`));
- if(!compact&&finite(station.wind))values.push(metric("💨","Vento",`${number(station.wind)} km/h`));
- return values.join("");
-}
-
-function officialCard(station){
- if(!station)return `<article class="station-card moena-loading-card">⚠️ Stazione ufficiale momentaneamente non disponibile.</article>`;
- stationStore.set(station.id,station);
- const time=timestamp(station);
- return `<article class="station-card moena-card moena-official-card" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli ${esc(station.fullName||station.name)}">
-  <div class="moena-card-head">
-   <div class="moena-card-title"><span class="moena-card-icon" aria-hidden="true">🏞️</span><span><strong>${esc(station.name)}</strong><small>${finite(station.altitude)?`${number(station.altitude,0)} m · `:""}${esc(station.sourceName||station.source)}</small></span></div>
-   <span class="moena-station-badge">UFFICIALE · METEOTRENTINO</span>
-  </div>
-  <div class="moena-official-reading"><div class="moena-temperature">${number(station.temperature)}°<small>C</small></div><div class="moena-station-time">Ultima misura<strong>${time?dayTime(time):"—"}</strong></div></div>
-  <div class="moena-quick-metrics">${mainMetrics(station)}</div>
-  ${footer(station)}
- </article>`;
-}
-
-function referenceCard(station){
+function mainStationCard(station){
  if(!station)return "";
  stationStore.set(station.id,station);
- return `<article class="station-card moena-card moena-reference-card" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli ${esc(station.fullName||station.name)}">
-  <div class="moena-card-head">
-   <div class="moena-card-title"><span class="moena-card-icon" aria-hidden="true">📍</span><span><strong>${esc(station.name)}</strong><small>${finite(station.altitude)?`${number(station.altitude,0)} m · `:""}${esc(station.source)}</small></span></div>
-   <span class="moena-station-badge reference">RIFERIMENTO</span>
-  </div>
-  <div class="moena-reference-main"><div class="moena-temperature">${number(station.temperature)}°</div>${finite(station.humidity)?`<div class="moena-reference-humidity">💧 ${number(station.humidity,0)}%</div>`:""}</div>
-  <div class="moena-quick-metrics">${mainMetrics(station,true)}</div>
-  ${footer(station)}
+ const info=freshness(station);
+ const official=station.category==="official"||station.id==="moena-diga-pezze";
+ const icon=official?"🏞️":station.id==="moena-meteo"?"🌡️":"📍";
+ const rain=finite(station.rainToday)?`<div class="rain-row">🌧️ ${number(station.rainToday)} mm oggi${finite(station.rainRate)?` · ${number(station.rainRate)} mm/h`:""}</div>`:"";
+ return `<article class="station-card moena-main-card ${official?"is-official":""}" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli ${esc(station.fullName||station.name)}">
+  <div class="moena-main-head"><div class="card-title"><span class="card-icon" aria-hidden="true">${icon}</span><strong>${esc(station.name)}</strong></div>${official?'<span class="moena-main-badge">UFFICIALE</span>':""}</div>
+  <div class="quota">${finite(station.altitude)?`${number(station.altitude,0)} m · `:""}${esc(station.sourceName||station.source)}</div>
+  <div class="temp-humidity-row compact-thr"><span class="value-num compact-value">${number(station.temperature)}°</span>${finite(station.humidity)?`<span class="value-num value-humidity compact-value">💧${number(station.humidity,0)}%</span>`:""}</div>
+  ${rain}
+  <div class="data-time ${info.className}"><span class="age-dot"></span>${esc(info.label)}</div>
+  <div class="tap-hint tap-hint-sm">Tocca per i dettagli ›</div>
  </article>`;
 }
 
 function renderMain(payload){
  const stations=Array.isArray(payload?.stations)?payload.stations:[];
- const official=stations.find(station=>station.category==="official"||station.id==="moena-diga-pezze");
- const references=stations.filter(station=>station!==official);
- $("#moena-official").innerHTML=officialCard(official);
- $("#moena-references").innerHTML=references.length?references.map(referenceCard).join(""):`<article class="station-card moena-loading-card">Riferimenti locali momentaneamente non disponibili.</article>`;
- attachStationHandlers($("#moena-official"));
- attachStationHandlers($("#moena-references"));
+ const track=$("#moena-main-track");
+ track.innerHTML=stations.length?stations.map(mainStationCard).join(""):`<article class="station-card moena-loading-card">⚠️ Stazioni momentaneamente non disponibili.</article>`;
+ attachStationHandlers(track);
 }
 
-function amateurCard(station){
+function amateurRow(station){
  stationStore.set(station.id,station);
  const info=freshness(station);
- const source=/underground/i.test(station.source||"")?"WU":station.source||"Amatoriale";
- return `<article class="moena-amateur-card" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli stazione amatoriale ${esc(station.name)}">
-  <div class="moena-amateur-top"><div class="moena-amateur-title"><strong>${esc(station.name)}</strong><small>${esc(source)}</small></div><span class="moena-amateur-state ${info.className==="fresh"?"":info.className==="warning"?"warning":"offline"}" aria-label="${esc(info.label)}"></span></div>
-  <div class="moena-amateur-value">${number(station.temperature)}°</div>
-  <div class="moena-amateur-humidity">${finite(station.humidity)?`💧 ${number(station.humidity,0)}%`:stationHasData(station)?"Umidità non disponibile":"Dati non disponibili"}</div>
-  <div class="moena-amateur-updated">${esc(info.short)}</div>
+ return `<article class="moena-amateur-row" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli stazione amatoriale ${esc(station.name)}">
+  <div class="moena-amateur-row-title"><strong>${esc(station.name)}</strong></div>
+  <div class="moena-amateur-row-values"><strong>${number(station.temperature)}°</strong>${finite(station.humidity)?`<span>💧${number(station.humidity,0)}%</span>`:""}</div>
+  <span class="moena-amateur-state ${info.className==="fresh"?"":info.className==="warning"?"warning":"offline"}" aria-label="${esc(info.label)}"></span>
  </article>`;
+}
+function amateurGroup(title,subtitle,stations){
+ return `<section class="moena-amateur-group" aria-label="${esc(title)}"><header class="moena-amateur-group-head"><span aria-hidden="true">📡</span><span><strong>${esc(title)}</strong><small>${esc(subtitle)}</small></span></header><div class="moena-amateur-list">${stations.map(amateurRow).join("")}</div></section>`;
 }
 function renderAmateurs(payload){
  const stations=Array.isArray(payload?.stations)?payload.stations:[];
- const track=$("#moena-amateur-track");
- track.innerHTML=stations.length?stations.map(amateurCard).join(""):`<article class="moena-amateur-card">⚠️ Dati momentaneamente non disponibili.</article>`;
+ const groups=$("#moena-amateur-groups");
+ const underground=stations.filter(station=>/underground/i.test(station.source||"")||/^IMOENA/i.test(station.upstreamId||""));
+ const netatmo=stations.filter(station=>!underground.includes(station));
+ groups.innerHTML=stations.length?[amateurGroup("Weather U.","3 stazioni",underground),amateurGroup("Netatmo","3 stazioni",netatmo)].join(""):`<article class="moena-amateur-group">⚠️ Dati momentaneamente non disponibili.</article>`;
  const available=stations.filter(stationHasData).length;
  $("#moena-amateur-summary").textContent=stations.length?`${available} di ${stations.length} con un dato disponibile`:"Dati momentaneamente non disponibili";
- attachStationHandlers(track);
+ attachStationHandlers(groups);
 }
 
 function attachStationHandlers(root){
