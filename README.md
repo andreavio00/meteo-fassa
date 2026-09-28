@@ -303,8 +303,9 @@ La stazione MeteoTrentino `trentino:campitello` viene presentata direttamente
 dal Worker come **Val Duron – Malga do Col d’Aura**.
 
 Ogni zona mostra quattro stazioni osservate. Nel settore di Moena, il
-riferimento per il San Pellegrino è **Sarcine - Passo San Pellegrino**, stazione
-MeteoNetwork `TRN362` in località Alochet/Sarcine (1800 m); Cima Paradiso non
+riferimento per il San Pellegrino è **Sarcine · Passo San Pellegrino**, stazione
+WeatherCloud `6354731265` in località Sarcine (1800 m). Le osservazioni più
+vecchie di 30 minuti non vengono presentate come correnti; Cima Paradiso non
 viene più associata al passo perché si trova nel settore di Passo Rolle. I
 punti previsionali disponibili restano invece quelli effettivamente forniti
 dall'Aggregator: 4 per Catinaccio, 4 per Sella e Sassolungo, 6 per Marmolada e
