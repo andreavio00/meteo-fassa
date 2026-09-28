@@ -1,4 +1,4 @@
-const CACHE_NAME="meteo-fassa-pwa-v15";
+const CACHE_NAME="meteo-fassa-pwa-v16";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const APP_SHELL=[
   "./previsioni.html",
   "./offline.html",
   "./manifest.webmanifest",
+  "./moena.webmanifest",
   "./style.css",
   "./stations-ui.css",
   "./forecast-ui.css",
@@ -25,7 +26,12 @@ const APP_SHELL=[
   "./icons/apple-touch-icon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
+  "./icons/icon-maskable-512.png",
+  "./icons/moena-favicon-64.png",
+  "./icons/moena-apple-touch-icon.png",
+  "./icons/moena-icon-192.png",
+  "./icons/moena-icon-512.png",
+  "./icons/moena-icon-maskable-512.png"
 ];
 
 self.addEventListener("install",event=>{

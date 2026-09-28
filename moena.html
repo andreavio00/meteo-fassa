@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#4f91b8">
+<meta name="theme-color" content="#14796e">
 <meta name="description" content="Condizioni osservate e previsioni meteo per Moena e la Val di Fassa.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MoenaLive">
 <title>Moena Live — Meteo Val di Fassa</title>
-<link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon-64.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<link rel="manifest" href="./moena.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="./icons/moena-favicon-64.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/moena-apple-touch-icon.png">
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./forecast-ui.css">
 <link rel="stylesheet" href="./moena.css?v=14">
@@ -22,6 +24,7 @@
   <h1><span class="title-icon" aria-hidden="true">🌲</span>Moena live</h1>
   <p>Condizioni osservate nel paese e previsioni per Moena.</p>
   <div id="moena-worker-status" class="worker-status" role="status" aria-live="polite">Aggiornamento dati…</div>
+  <button id="pwa-install" class="pwa-install" type="button" hidden>Installa MoenaLive</button>
  </header>
 
  <section class="main-stations moena-stations" aria-labelledby="moena-stations-title">

@@ -258,6 +258,7 @@ previsioni.html
 previsioni.css
 previsioni.js
 manifest.webmanifest
+moena.webmanifest
 sw.js
 pwa.js
 offline.html
@@ -410,13 +411,19 @@ Sono i Worker a occuparsi di:
 
 ## 9. Progressive Web App
 
-Il sito è installabile come PWA da Android e dagli altri browser compatibili.
-`manifest.webmanifest` definisce nome, colori, icone, pagina iniziale e tre
-scorciatoie: **Pozza Live**, **Le escursioni** e **Cerca una località**. Quando il browser lo consente,
-nella home compare anche il pulsante **Installa app**.
+Il sito espone due PWA installabili e riconoscibili separatamente:
 
-`sw.js` conserva i file essenziali delle tre pagine e permette di riaprirle
-anche senza rete. Le richieste ai Worker meteo non vengono intercettate dal
+- `manifest.webmanifest` identifica **PozzaLive** e la apre da `index.html`;
+- `moena.webmanifest` identifica **MoenaLive** e la apre da `moena.html`.
+
+I due manifest hanno identificativi, nomi, colori, icone e pagine iniziali
+distinti. Quando il browser lo consente, ciascuna home mostra il proprio
+pulsante di installazione. Le scorciatoie per escursioni e previsioni su
+richiesta restano disponibili da entrambe le app.
+
+Le due PWA condividono un solo `sw.js`, così non esistono service worker con
+ambiti sovrapposti. Il service worker conserva i file essenziali delle pagine
+e permette di riaprirle anche senza rete. Le richieste ai Worker meteo non vengono intercettate dal
 service worker: gli ultimi JSON validi continuano a essere gestiti dalle cache
 `localStorage` già previste dal frontend. In questo modo un valore vecchio non
 viene confuso con una nuova risposta del Worker.
@@ -449,7 +456,7 @@ cache applicativa dopo l'aggiornamento.
 - testata escursioni compatta con accessi evidenti a Pozza Live e alle previsioni 08–20
 - stazioni in quota lette dagli endpoint di zona dell'Aggregator
 - previsioni escursioni limitate alle fasce 08–20
-- PWA installabile con manifest, icone dedicate e scorciatoie per Pozza ed escursioni
+- PozzaLive e MoenaLive installabili separatamente, con manifest, identità e icone dedicate
 - service worker limitato ai file del sito, con navigazione offline e aggiornamento dalla rete
 - cache dei dati meteo ancora gestita dal frontend, senza duplicarla nel service worker
 - pagina delle previsioni su richiesta verificata con Meteo.report e Open-Meteo
