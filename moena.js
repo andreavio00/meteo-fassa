@@ -5,7 +5,7 @@ const MAIN_URL="https://meteomoena-stazioni.andrea-vio.workers.dev/stations";
 const AMATEUR_URL="https://meteomoena-amatoriali.andrea-vio.workers.dev/stations";
 const FORECAST_URL="https://meteomoena-previsioni.andrea-vio.workers.dev/forecast";
 const CACHE_MAX_AGE=6*60*60*1000;
-const MAIN_CACHE_KEY="meteo-fassa-moena-main-v1";
+const MAIN_CACHE_KEY="meteo-fassa-moena-main-v2";
 const AMATEUR_CACHE_KEY="meteo-fassa-moena-amateurs-v1";
 const FORECAST_CACHE_KEY="meteo-fassa-moena-forecast-v1";
 const stationStore=new Map();
@@ -26,6 +26,8 @@ const $=selector=>document.querySelector(selector);
 const finite=value=>value!==null&&value!==undefined&&value!==""&&Number.isFinite(Number(value));
 const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
 const number=(value,digits=1)=>finite(value)?new Intl.NumberFormat("it-IT",{minimumFractionDigits:0,maximumFractionDigits:digits}).format(Number(value)):"—";
+const COMFORT_MIN=-10;
+const COMFORT_MAX=35;
 
 function safeUrl(value){
  try{const url=new URL(value,location.href);return ["http:","https:"].includes(url.protocol)?url.href:null;}catch{return null;}
@@ -81,51 +83,83 @@ function windDirection(station){
  return labels[Math.round((((Number(station.windDirection)%360)+360)%360)/22.5)%16];
 }
 
+function stationIcon(station){
+ if(station?.id==="moena-diga-pezze")return "🏞️";
+ if(station?.id==="moena-meteo")return "🌡️";
+ if(station?.id==="moena-pezze-meteonetwork")return "🏡";
+ return "📡";
+}
+
+function feltTemperature(station){
+ if(finite(station?.feelsLike))return Number(station.feelsLike);
+ if(finite(station?.heatIndex))return Number(station.heatIndex);
+ if(finite(station?.windChill))return Number(station.windChill);
+ if(![station?.temperature,station?.humidity,station?.wind].every(finite))return null;
+ const temperature=Number(station.temperature);
+ const humidity=Number(station.humidity);
+ const wind=Number(station.wind)/3.6;
+ const vapour=(humidity/100)*6.105*Math.exp((17.27*temperature)/(237.7+temperature));
+ return temperature+0.33*vapour-0.70*wind-4;
+}
+
+function scalePercent(value){
+ if(!finite(value))return null;
+ return Math.max(0,Math.min(100,((Number(value)-COMFORT_MIN)/(COMFORT_MAX-COMFORT_MIN))*100));
+}
+function comfortLabel(value){
+ if(!finite(value))return "—";
+ const temperature=Number(value);
+ if(temperature<5)return "Freddo";
+ if(temperature<13)return "Fresco";
+ if(temperature<22)return "Confortevole";
+ if(temperature<27)return "Caldo";
+ return "Molto caldo";
+}
+function qualityBar(value){
+ const percent=scalePercent(value);
+ const color=percent===null?"var(--unknown)":percent<=33?"var(--grad-cold)":percent<=66?"var(--grad-mid)":"var(--grad-hot)";
+ const marker=percent===null?"display:none":`left:${percent}%;border-color:${color}`;
+ return `<div class="quality-row"><div class="quality-track"><div class="quality-marker" style="${marker}"></div></div><span class="quality-label" style="color:${color}">${esc(comfortLabel(value))}</span></div>`;
+}
+function feltRow(value){
+ return `<div class="percepita-block"><div class="percepita-label">Percepita <strong>${finite(value)?`${number(value,0)}°`:"—"}</strong></div>${qualityBar(value)}</div>`;
+}
+function metric(icon,label,value){
+ return `<div class="metric"><span class="metric-icon" aria-hidden="true">${icon}</span><span class="metric-text"><small>${esc(label)}</small><strong>${esc(value)}</strong></span></div>`;
+}
+
 function mainStationCard(station){
  if(!station)return "";
  stationStore.set(station.id,station);
  const info=freshness(station);
  const official=station.category==="official"||station.id==="moena-diga-pezze";
- const icon=official?"🏞️":station.id==="moena-meteo"?"🌡️":"📍";
+ const amateur=station.category==="amateur";
+ const icon=stationIcon(station);
+ const infoClass=info.className==="offline"?"unknown":info.className;
  const rain=finite(station.rainToday)?`<div class="rain-row">🌧️ ${number(station.rainToday)} mm oggi${finite(station.rainRate)?` · ${number(station.rainRate)} mm/h`:""}</div>`:"";
- return `<article class="station-card moena-main-card ${official?"is-official":""}" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli ${esc(station.fullName||station.name)}">
-  <div class="moena-main-head"><div class="card-title"><span class="card-icon" aria-hidden="true">${icon}</span><strong>${esc(station.name)}</strong></div>${official?'<span class="moena-main-badge">UFFICIALE</span>':""}</div>
+ const badge=official?"UFFICIALE":amateur?"AMATORIALE":"";
+ return `<article class="station-card moena-main-card ${official?"is-official":""} ${amateur?"is-amateur":""}" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli ${esc(station.fullName||station.name)}">
+  <div class="moena-main-head"><div class="card-title"><span class="card-icon" aria-hidden="true">${icon}</span><strong>${esc(station.name)}</strong></div>${badge?`<span class="moena-main-badge">${badge}</span>`:""}</div>
   <div class="quota">${finite(station.altitude)?`${number(station.altitude,0)} m · `:""}${esc(station.sourceName||station.source)}</div>
   <div class="temp-humidity-row compact-thr"><span class="value-num compact-value">${number(station.temperature)}°</span>${finite(station.humidity)?`<span class="value-num value-humidity compact-value">💧${number(station.humidity,0)}%</span>`:""}</div>
   ${rain}
-  <div class="data-time ${info.className}"><span class="age-dot"></span>${esc(info.label)}</div>
+  <div class="data-time ${infoClass}"><span class="age-dot"></span>${esc(info.label)}</div>
   <div class="tap-hint tap-hint-sm">Tocca per i dettagli ›</div>
  </article>`;
 }
 
-function renderMain(payload){
- const stations=Array.isArray(payload?.stations)?payload.stations:[];
+function renderStations(){
+ const main=Array.isArray(mainPayload?.stations)?mainPayload.stations:[];
+ const amateurs=Array.isArray(amateurPayload?.stations)?amateurPayload.stations:[];
+ const stations=[...main,...amateurs];
  const track=$("#moena-main-track");
+ stationStore.clear();
  track.innerHTML=stations.length?stations.map(mainStationCard).join(""):`<article class="station-card moena-loading-card">⚠️ Stazioni momentaneamente non disponibili.</article>`;
  attachStationHandlers(track);
-}
-
-function amateurRow(station){
- stationStore.set(station.id,station);
- const info=freshness(station);
- return `<article class="moena-amateur-row" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli stazione amatoriale ${esc(station.name)}">
-  <div class="moena-amateur-row-title"><strong>${esc(station.name)}</strong></div>
-  <div class="moena-amateur-row-values"><strong>${number(station.temperature)}°</strong>${finite(station.humidity)?`<span>💧${number(station.humidity,0)}%</span>`:""}</div>
-  <span class="moena-amateur-state ${info.className==="fresh"?"":info.className==="warning"?"warning":"offline"}" aria-label="${esc(info.label)}"></span>
- </article>`;
-}
-function amateurGroup(title,subtitle,stations){
- return `<section class="moena-amateur-group" aria-label="${esc(title)}"><header class="moena-amateur-group-head"><span aria-hidden="true">📡</span><span><strong>${esc(title)}</strong><small>${esc(subtitle)}</small></span></header><div class="moena-amateur-list">${stations.map(amateurRow).join("")}</div></section>`;
-}
-function renderAmateurs(payload){
- const stations=Array.isArray(payload?.stations)?payload.stations:[];
- const groups=$("#moena-amateur-groups");
- const underground=stations.filter(station=>/underground/i.test(station.source||"")||/^IMOENA/i.test(station.upstreamId||""));
- const netatmo=stations.filter(station=>!underground.includes(station));
- groups.innerHTML=stations.length?[amateurGroup("Weather U.","3 stazioni",underground),amateurGroup("Netatmo","3 stazioni",netatmo)].join(""):`<article class="moena-amateur-group">⚠️ Dati momentaneamente non disponibili.</article>`;
- const available=stations.filter(stationHasData).length;
- $("#moena-amateur-summary").textContent=stations.length?`${available} di ${stations.length} con un dato disponibile`:"Dati momentaneamente non disponibili";
- attachStationHandlers(groups);
+ const mainAvailable=main.filter(stationHasData).length;
+ const amateurAvailable=amateurs.filter(stationHasData).length;
+ const summary=$("#moena-stations-summary");
+ if(summary)summary.textContent=`${mainAvailable} riferimenti · ${amateurAvailable} amatoriali con dati`;
 }
 
 function attachStationHandlers(root){
@@ -186,37 +220,43 @@ async function loadStationGroup(kind,url,key,renderer){
  }finally{updateMainStatus();}
 }
 
-function modalRow(label,value){return value?`<div class="moena-modal-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`:"";}
 function openStation(id){
  const station=stationStore.get(id);
  if(!station)return;
- const values=[
-  ["Temperatura",finite(station.temperature)?`${number(station.temperature)} °C`:null],
-  ["Minima / massima",finite(station.temperatureMin)||finite(station.temperatureMax)?`${number(station.temperatureMin)} / ${number(station.temperatureMax)} °C`:null],
-  ["Percepita",finite(station.windChill)?`${number(station.windChill)} °C`:finite(station.feelsLike)?`${number(station.feelsLike)} °C`:null],
-  ["Umidità",finite(station.humidity)?`${number(station.humidity,0)}%`:null],
-  ["Punto di rugiada",finite(station.dewPoint)?`${number(station.dewPoint)} °C`:null],
-  ["Pressione",finite(station.pressure)?`${number(station.pressure)} hPa`:null],
-  ["Vento",finite(station.wind)?`${number(station.wind)} km/h${windDirection(station)?` · ${windDirection(station)}`:""}`:null],
-  ["Raffica",finite(station.windGust)?`${number(station.windGust)} km/h`:null],
-  ["Pioggia oggi",finite(station.rainToday)?`${number(station.rainToday)} mm`:null],
-  ["Intensità pioggia",finite(station.rainRate)?`${number(station.rainRate)} mm/h`:null],
-  ["Radiazione solare",finite(station.solarRadiation)?`${number(station.solarRadiation,0)} W/m²`:null],
-  ["Indice UV",finite(station.uvIndex)?number(station.uvIndex):null]
- ];
+ const felt=feltTemperature(station);
+ const direction=windDirection(station);
+ const minMax=finite(station.temperatureMin)||finite(station.temperatureMax)?`${number(station.temperatureMin)} / ${number(station.temperatureMax)} °C`:"—";
+ const metrics=[
+  metric("↕️","Minima / massima",minMax),
+  metric("🌡️","Punto di rugiada",finite(station.dewPoint)?`${number(station.dewPoint)} °C`:"—"),
+  metric("♨️","Indice di calore",finite(station.heatIndex)?`${number(station.heatIndex)} °C`:"—"),
+  metric("🥶","Wind chill",finite(station.windChill)?`${number(station.windChill)} °C`:"—"),
+  metric("💨","Vento",finite(station.wind)?`${number(station.wind)} km/h${direction?` · ${direction}`:""}`:"—"),
+  metric("🌬️","Raffica",finite(station.windGust)?`${number(station.windGust)} km/h`:"—"),
+  metric("⏲️","Pressione",finite(station.pressure)?`${number(station.pressure)} hPa`:"—"),
+  metric("🌧️","Pioggia",finite(station.rainRate)?`${number(station.rainRate)} mm/h`:"—"),
+  metric("☔","Pioggia oggi",finite(station.rainToday)?`${number(station.rainToday)} mm`:"—"),
+  metric("☀️","Radiazione solare",finite(station.solarRadiation)?`${number(station.solarRadiation,0)} W/m²`:"—"),
+  metric("🔆","Indice UV",finite(station.uvIndex)?number(station.uvIndex):"—")
+ ].join("");
  const coordinates=finite(station.latitude)&&finite(station.longitude);
  const mapUrl=coordinates?`https://www.openstreetmap.org/?mlat=${encodeURIComponent(station.latitude)}&mlon=${encodeURIComponent(station.longitude)}#map=16/${encodeURIComponent(station.latitude)}/${encodeURIComponent(station.longitude)}`:null;
  const source=safeUrl(station.sourceUrl);
+ const sourceLabel=sourceShort(station);
  const info=freshness(station);
+ const infoClass=info.className==="offline"?"unknown":info.className;
  const notes=[...(station.warnings||[])];
  if(station.stale||station.status==="stale")notes.push("È mostrato l’ultimo dato disponibile: l’aggiornamento più recente della fonte non è riuscito.");
- openModal(`<div class="moena-modal-head"><h2>${esc(station.fullName||station.name)}</h2><p>${finite(station.altitude)?`${number(station.altitude,0)} m · `:""}${esc(sourceShort(station))}${station.notice?` · ${esc(station.notice)}`:""}</p></div>
-  <div class="moena-modal-temp">${number(station.temperature)}°</div>
-  <div class="moena-freshness ${info.className}"><span class="moena-freshness-dot"></span>${esc(info.label)}</div>
-  <div class="moena-modal-grid">${values.map(([label,value])=>modalRow(label,value)).join("")}</div>
+ openModal(`<div class="hero-top moena-detail-head"><span class="card-icon" aria-hidden="true">${stationIcon(station)}</span><div><div class="station-name">${esc(station.fullName||station.name)}</div><div class="quota">${finite(station.altitude)?`${number(station.altitude,0)} m · `:""}${esc(sourceLabel)}${station.notice?` · ${esc(station.notice)}`:""}</div></div></div>
+  <div class="hero-values moena-detail-values">
+   <div class="temp-humidity-row"><span class="value-num">${number(station.temperature)}°</span>${finite(station.humidity)?`<span class="value-num value-humidity">💧${number(station.humidity,0)}%</span>`:""}</div>
+   ${feltRow(felt)}
+   <div class="metrics">${metrics}</div>
+  </div>
+  <div class="data-time ${infoClass} moena-detail-time"><span class="age-dot"></span>${esc(info.label)}</div>
   ${coordinates?`<a class="moena-coordinate-link" href="${esc(mapUrl)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">📍</span><span>${number(Math.abs(station.latitude),5)}° ${station.latitude>=0?"N":"S"} · ${number(Math.abs(station.longitude),5)}° ${station.longitude>=0?"E":"O"}${station.coordinatesApproximate?" · posizione indicativa":""} ↗</span></a>`:""}
   ${notes.length?`<div class="moena-modal-note">${notes.map(esc).join("<br>")}</div>`:""}
-  ${source?`<a class="moena-source-link" href="${esc(source)}" target="_blank" rel="noopener noreferrer">Apri il sito della fonte ↗</a>`:""}`);
+  ${source?`<a class="moena-source-link" href="${esc(source)}" target="_blank" rel="noopener noreferrer">🌐 ${esc(sourceLabel)} ↗</a>`:""}`);
 }
 
 function weather(code){return WEATHER[String(code||"").toUpperCase()]||["Variabile","🌤️"];}
@@ -340,8 +380,8 @@ function initModal(){
 
 function init(){
  initModal();
- loadStationGroup("main",MAIN_URL,MAIN_CACHE_KEY,renderMain);
- loadStationGroup("amateur",AMATEUR_URL,AMATEUR_CACHE_KEY,renderAmateurs);
+ loadStationGroup("main",MAIN_URL,MAIN_CACHE_KEY,renderStations);
+ loadStationGroup("amateur",AMATEUR_URL,AMATEUR_CACHE_KEY,renderStations);
  loadForecast();
 }
 

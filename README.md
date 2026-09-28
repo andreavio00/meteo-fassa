@@ -23,12 +23,15 @@ Pagina diretta:
 `https://andreavio00.github.io/meteo-fassa/moena.html`
 
 La pagina rimane per ora autonoma e non è collegata da Pozza Live. Le tre
-stazioni principali — **Moena - Diga di Pezzè**, **Moena Meteo** e, in attesa
-della sostituzione, **Vigo di Fassa** — sono disposte sulla stessa riga con il
-formato di PozzaLive; su schermi piccoli se ne vedono due e la terza si raggiunge
-scorrendo. Le sei amatoriali sono raccolte in due schede affiancate da tre
-righe, una Weather Underground e una Netatmo. Non vengono mediate, perché
-posizione, quota ed esposizione possono produrre valori differenti.
+stazioni principali sono **Moena - Diga di Pezzè**, **Strada de Even**
+(Moena Meteo) e **Moena - Frazione Pezzè** (MeteoNetwork TRN352). Seguono le
+sei stazioni amatoriali: tutte le nove schede condividono un unico carosello,
+con tre elementi visibili su desktop e due su schermi più piccoli. Le
+amatoriali restano riconoscibili dal bordo e dalla relativa etichetta e non
+vengono mediate, perché posizione, quota ed esposizione possono produrre
+valori differenti. Il dettaglio usa lo stesso formato della stazione di Vigo
+in PozzaLive, con temperatura percepita, barra termica, metriche con icone,
+coordinate e collegamento nominativo alla fonte.
 
 Worker dedicati:
 

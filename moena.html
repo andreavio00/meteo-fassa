@@ -24,25 +24,15 @@
   <div id="moena-worker-status" class="worker-status" role="status" aria-live="polite">Aggiornamento dati…</div>
  </header>
 
- <section class="main-stations moena-stations" aria-label="Stazioni di riferimento di Moena">
+ <section class="main-stations moena-stations" aria-labelledby="moena-stations-title">
+  <div class="moena-stations-heading">
+   <span class="moena-stations-icon" aria-hidden="true">🌡️</span>
+   <span><strong id="moena-stations-title">Stazioni di Moena</strong><small id="moena-stations-summary">Tre riferimenti e sei stazioni amatoriali</small></span>
+  </div>
   <div id="moena-main-track" class="moena-main-track" aria-live="polite">
    <article class="station-card moena-loading-card" aria-busy="true">Aggiornamento stazioni…</article>
   </div>
   <div class="station-swipe-hint" aria-hidden="true">Scorri tutte le stazioni →</div>
- </section>
-
- <section class="moena-amateurs" aria-labelledby="moena-amateurs-title">
-  <div class="moena-amateur-heading">
-   <div>
-    <span class="moena-amateur-icon" aria-hidden="true">📡</span>
-    <span><strong id="moena-amateurs-title">Stazioni amatoriali</strong><small id="moena-amateur-summary">Sei punti di confronto nel paese</small></span>
-   </div>
-   <span class="moena-amateur-badge">NON UFFICIALI</span>
-  </div>
-  <p class="moena-amateur-note">Posizione, quota ed esposizione possono produrre valori diversi. Le stazioni sono mostrate singolarmente e non viene calcolata una media.</p>
-  <div id="moena-amateur-groups" class="moena-amateur-groups" aria-live="polite">
-   <article class="moena-amateur-group is-loading" aria-busy="true">Aggiornamento stazioni…</article>
-  </div>
  </section>
 
  <section class="forecast-section moena-forecast">
