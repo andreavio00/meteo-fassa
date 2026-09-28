@@ -133,12 +133,11 @@ function mainStationCard(station){
  stationStore.set(station.id,station);
  const info=freshness(station);
  const official=station.category==="official"||station.id==="moena-diga-pezze";
- const amateur=station.category==="amateur";
  const icon=stationIcon(station);
  const infoClass=info.className==="offline"?"unknown":info.className;
  const rain=finite(station.rainToday)?`<div class="rain-row">🌧️ ${number(station.rainToday)} mm oggi${finite(station.rainRate)?` · ${number(station.rainRate)} mm/h`:""}</div>`:"";
- const badge=official?"UFFICIALE":amateur?"AMATORIALE":"";
- return `<article class="station-card moena-main-card ${official?"is-official":""} ${amateur?"is-amateur":""}" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli ${esc(station.fullName||station.name)}">
+ const badge=official?"UFFICIALE":"";
+ return `<article class="station-card moena-main-card ${official?"is-official":""}" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli ${esc(station.fullName||station.name)}">
   <div class="moena-main-head"><div class="card-title"><span class="card-icon" aria-hidden="true">${icon}</span><strong>${esc(station.name)}</strong></div>${badge?`<span class="moena-main-badge">${badge}</span>`:""}</div>
   <div class="quota">${finite(station.altitude)?`${number(station.altitude,0)} m · `:""}${esc(station.sourceName||station.source)}</div>
   <div class="temp-humidity-row compact-thr"><span class="value-num compact-value">${number(station.temperature)}°</span>${finite(station.humidity)?`<span class="value-num value-humidity compact-value">💧${number(station.humidity,0)}%</span>`:""}</div>
@@ -148,13 +147,35 @@ function mainStationCard(station){
  </article>`;
 }
 
+function amateurRow(station){
+ stationStore.set(station.id,station);
+ const info=freshness(station);
+ const stateClass=info.className==="fresh"?"":info.className==="warning"||info.className==="old"?"warning":"offline";
+ return `<article class="moena-amateur-row" data-station-id="${esc(station.id)}" tabindex="0" role="button" aria-label="Dettagli stazione amatoriale ${esc(station.fullName||station.name)}">
+  <div class="moena-amateur-row-title"><strong>${esc(station.name)}</strong></div>
+  <div class="moena-amateur-row-values"><strong>${number(station.temperature)}°</strong>${finite(station.humidity)?`<span>💧${number(station.humidity,0)}%</span>`:""}</div>
+  <span class="moena-amateur-state ${stateClass}" title="${esc(info.label)}" aria-label="${esc(info.label)}"></span>
+ </article>`;
+}
+
+function amateurGroup(title,stations){
+ const available=stations.filter(stationHasData).length;
+ return `<section class="station-card moena-amateur-group-card" aria-label="Stazioni amatoriali ${esc(title)}">
+  <header class="moena-amateur-group-head"><span aria-hidden="true">📡</span><span><strong>${esc(title)}</strong><small>${available} di ${stations.length} con dati</small></span><span class="moena-amateur-badge">AMATORIALI</span></header>
+  <div class="moena-amateur-list">${stations.map(amateurRow).join("")}</div>
+ </section>`;
+}
+
 function renderStations(){
  const main=Array.isArray(mainPayload?.stations)?mainPayload.stations:[];
  const amateurs=Array.isArray(amateurPayload?.stations)?amateurPayload.stations:[];
- const stations=[...main,...amateurs];
  const track=$("#moena-main-track");
  stationStore.clear();
- track.innerHTML=stations.length?stations.map(mainStationCard).join(""):`<article class="station-card moena-loading-card">⚠️ Stazioni momentaneamente non disponibili.</article>`;
+ const underground=amateurs.filter(station=>/underground/i.test(station.source||"")||/^IMOENA/i.test(station.upstreamId||""));
+ const netatmo=amateurs.filter(station=>!underground.includes(station));
+ const groups=amateurs.length?[amateurGroup("Weather U.",underground),amateurGroup("Netatmo",netatmo)]:[];
+ const cards=[...main.map(mainStationCard),...groups];
+ track.innerHTML=cards.length?cards.join(""):`<article class="station-card moena-loading-card">⚠️ Stazioni momentaneamente non disponibili.</article>`;
  attachStationHandlers(track);
  const mainAvailable=main.filter(stationHasData).length;
  const amateurAvailable=amateurs.filter(stationHasData).length;

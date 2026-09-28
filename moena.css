@@ -2,8 +2,7 @@
 .moena-page{max-width:1050px}
 .moena-header p{margin:0 auto 8px;color:var(--ink-soft);font-size:11px}
 
-/* Tutte le stazioni condividono un solo carosello. Le tre di riferimento
-   restano per prime; le sei amatoriali seguono nello stesso scorrimento. */
+/* Un solo carosello: tre riferimenti, poi due gruppi amatoriali compatti. */
 .moena-stations-heading{display:flex;align-items:center;gap:8px;margin:0 3px 8px}
 .moena-stations-heading>span:last-child{display:flex;min-width:0;flex-direction:column;gap:1px}
 .moena-stations-heading strong{font-size:14px;color:var(--ink)}
@@ -16,20 +15,21 @@
 }
 .moena-main-track::-webkit-scrollbar{display:none}
 .moena-loading-card{flex:1 0 100%;min-height:135px;display:grid;place-items:center;color:var(--ink-soft);font-size:11px}
-.moena-main-card{
+.moena-main-card,.moena-amateur-group-card{
  flex:0 0 calc((100% - 16px)/3);min-width:0;min-height:150px;height:auto;padding:11px;
- display:flex;flex-direction:column;gap:7px;scroll-snap-align:start;
+ scroll-snap-align:start
+}
+.moena-main-card{
+ display:flex;flex-direction:column;gap:7px;
  cursor:pointer;transition:box-shadow .15s,transform .15s
 }
 .moena-main-card:hover,.moena-main-card:focus-visible{box-shadow:0 4px 14px rgba(20,40,60,.12);transform:translateY(-1px);outline:none}
 .moena-main-card.is-official{border-left:3px solid #7395a8}
-.moena-main-card.is-amateur{border-left:3px solid #a99072;background:#fffdf9}
 .moena-main-head{display:flex;align-items:flex-start;justify-content:space-between;gap:7px;min-width:0}
 .moena-main-head .card-title{min-width:0}
 .moena-main-head .card-title strong{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .moena-main-head .card-icon{font-size:20px}
 .moena-main-badge{flex:0 0 auto;padding:3px 6px;border-radius:999px;background:#e9f0f3;color:#466879;font-size:7px;font-weight:900;letter-spacing:.04em}
-.moena-main-card.is-amateur .moena-main-badge{background:#f0ece7;color:#6c5b49}
 .moena-main-card .quota{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .moena-main-card .compact-thr{margin-top:3px}
 .moena-main-card .compact-value{font-size:24px}
@@ -38,6 +38,35 @@
 .moena-main-card .data-time{margin-top:auto}
 .moena-main-card .tap-hint{font-size:8px;color:var(--ink-soft);text-align:right}
 .moena-stations .station-swipe-hint{display:block}
+
+.moena-amateur-group-card{
+ position:relative;overflow:hidden;padding:8px 8px 8px 11px;
+ background:#fffdf9;display:flex;flex-direction:column;gap:6px
+}
+.moena-amateur-group-card::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:#a99072}
+.moena-amateur-group-head{display:flex;align-items:center;gap:6px;min-width:0;padding:0 2px}
+.moena-amateur-group-head>span:first-child{font-size:15px;line-height:1;flex:0 0 auto}
+.moena-amateur-group-head>span:nth-child(2){display:flex;min-width:0;flex:1;flex-direction:column;line-height:1.1}
+.moena-amateur-group-head strong{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.moena-amateur-group-head small{margin-top:2px;font-size:8px;color:var(--ink-soft)}
+.moena-amateur-badge{flex:0 0 auto;padding:3px 5px;border-radius:999px;background:#f0ece7;color:#6c5b49;font-size:6.5px;font-weight:900;letter-spacing:.03em}
+.moena-amateur-list{flex:1;display:grid;grid-template-rows:repeat(3,minmax(32px,1fr));gap:4px;min-width:0}
+.moena-amateur-row{
+ width:100%;min-height:32px;min-width:0;padding:4px 6px;
+ border:1px solid #e6e9e7;border-radius:9px;background:#f8f9f8;
+ display:grid;grid-template-columns:minmax(0,1fr) auto 6px 7px;gap:5px;align-items:center;
+ cursor:pointer;transition:box-shadow .15s,transform .15s,border-color .15s
+}
+.moena-amateur-row::after{content:"›";grid-column:4;color:#8b8074;font-size:14px;font-weight:850}
+.moena-amateur-row:hover,.moena-amateur-row:focus-visible{border-color:#b8ada0;box-shadow:0 3px 9px rgba(20,40,60,.10);transform:translateY(-1px);outline:none}
+.moena-amateur-row-title{grid-column:1;min-width:0;color:var(--ink);font-size:11px;line-height:1.1}
+.moena-amateur-row-title strong{display:block;overflow:hidden;text-overflow:ellipsis;font-weight:800;white-space:nowrap}
+.moena-amateur-row-values{grid-column:2;display:flex;align-items:baseline;justify-content:flex-end;gap:6px;white-space:nowrap}
+.moena-amateur-row-values strong{color:var(--ink);font-size:18px;line-height:1;letter-spacing:-.4px}
+.moena-amateur-row-values span{color:var(--ink-soft);font-size:9px;font-weight:750}
+.moena-amateur-state{grid-column:3;grid-row:1;width:6px;height:6px;border-radius:50%;background:#55906d;box-shadow:0 0 0 2px rgba(85,144,109,.12)}
+.moena-amateur-state.warning{background:#bd8b46;box-shadow:0 0 0 2px rgba(189,139,70,.14)}
+.moena-amateur-state.offline{background:#b5564a;box-shadow:0 0 0 2px rgba(181,86,74,.12)}
 
 /* Dettaglio coerente con la modale della stazione di Vigo in PozzaLive. */
 .moena-detail-head{padding-right:34px}
@@ -50,15 +79,23 @@
 .moena-modal-note{margin-top:10px;padding:9px 10px;border-left:3px solid #a99072;background:#fff6e8;color:#74552f;font-size:9px;line-height:1.4}
 
 @media(max-width:900px){
- .moena-main-card{flex-basis:calc((100% - 7px)/2)}
+ .moena-main-card,.moena-amateur-group-card{flex-basis:calc((100% - 7px)/2)}
 }
 @media(max-width:600px){
  .moena-page{width:calc(100% - 8px)}
  .moena-stations-heading{margin-inline:2px}
  .moena-main-card .moena-main-badge{display:none}
+ .moena-amateur-badge{display:none}
+ .moena-amateur-group-card{padding:7px 6px 7px 9px;border-radius:15px}
+ .moena-amateur-row{padding:4px 5px}
+ .moena-amateur-row-title{font-size:10.5px}
+ .moena-amateur-row-values span{display:none}
  .moena-detail-values .metrics{grid-template-columns:1fr 1fr}
 }
 @media(max-width:350px){
- .moena-main-card{flex-basis:calc((100% - 6px)/2)}
+ .moena-main-card,.moena-amateur-group-card{flex-basis:calc((100% - 6px)/2)}
+ .moena-amateur-group-head strong{font-size:10.5px}
+ .moena-amateur-row-title{font-size:9.5px}
+ .moena-amateur-row-values strong{font-size:17px}
  .moena-detail-values .metrics{grid-template-columns:1fr}
 }

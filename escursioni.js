@@ -3,7 +3,7 @@ const ROME="Europe/Rome";
 const STALE_AFTER_MINUTES=60;
 const FETCH_TIMEOUT_MS=30000;
 const CACHE_MAX_AGE_MS=6*60*60*1000;
-const CACHE_PREFIX="meteo-fassa-hike-v4:";
+const CACHE_PREFIX="meteo-fassa-hike-v5:";
 const PERIODS=[
  {id:"08-11",start:"08:00",label:"08–11",endMinutes:11*60},
  {id:"11-14",start:"11:00",label:"11–14",endMinutes:14*60},
@@ -47,11 +47,17 @@ let selectedZone="catinaccio";
 let selectedDate=null;
 let selectedPeriod=PERIODS[0].id;
 let loadToken=0;
+const pageParams=new URLSearchParams(location.search);
+const fromMoena=pageParams.get("from")==="moena";
 
 const $=selector=>document.querySelector(selector);
 const finite=value=>value!==null&&value!==undefined&&value!==""&&Number.isFinite(Number(value));
 const fmt=(value,digits=1)=>finite(value)?Number(value).toFixed(digits).replace(".",","):"—";
 const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+
+function zoneName(zone){
+ return fromMoena&&zone?.moenaName?zone.moenaName:zone?.name||"";
+}
 
 function parsedDate(value){
  if(!value)return null;
@@ -302,7 +308,7 @@ function renderPeriods(){
 function renderForecast(){
  const box=$("#forecast-grid");
  const periodConfig=PERIODS.find(period=>period.id===selectedPeriod)||PERIODS[0];
- $("#forecast-window").textContent=`${dayLabel(selectedDate)} · ${periodConfig.label} · ${CFG.zones[selectedZone].name}`;
+ $("#forecast-window").textContent=`${dayLabel(selectedDate)} · ${periodConfig.label} · ${zoneName(CFG.zones[selectedZone])}`;
  const available=forecastLocations.map(location=>({location,period:periodFor(location,selectedDate,selectedPeriod)})).filter(item=>item.period);
  box.innerHTML=available.length?available.map(item=>forecastCard(item.location,item.period)).join(""):'<div class="forecast-empty">Nessuna previsione disponibile per questa fascia.</div>';
  box.querySelectorAll("[data-location-id]").forEach(button=>button.addEventListener("click",()=>{
@@ -393,7 +399,12 @@ async function loadZone(zoneKey){
   button.classList.toggle("active",active);
   button.setAttribute("aria-selected",active?"true":"false");
  });
- try{history.replaceState(null,"",`?zona=${zone}`);}catch{}
+ try{
+  const nextParams=new URLSearchParams();
+  nextParams.set("zona",zone);
+  if(fromMoena)nextParams.set("from","moena");
+  history.replaceState(null,"",`?${nextParams.toString()}`);
+ }catch{}
 
  const status=$("#hike-status");
  status.hidden=true;
@@ -461,11 +472,11 @@ async function loadZone(zoneKey){
   status.className="worker-status error";
   status.hidden=false;
  }else if(!stationReady||!forecastReady){
-  status.textContent=`${zoneConfig.name} · disponibili solo ${stationReady?"le osservazioni":"le previsioni"}`;
+  status.textContent=`${zoneName(zoneConfig)} · disponibili solo ${stationReady?"le osservazioni":"le previsioni"}`;
   status.className="worker-status error";
   status.hidden=false;
  }else if(refreshFailures.length){
-  status.textContent=`${zoneConfig.name} · ultimi dati salvati, aggiornamento non riuscito`;
+  status.textContent=`${zoneName(zoneConfig)} · ultimi dati salvati, aggiornamento non riuscito`;
   status.className="worker-status";
   status.hidden=false;
  }else{
@@ -476,13 +487,12 @@ async function loadZone(zoneKey){
 }
 
 function init(){
- const params=new URLSearchParams(location.search);
- if(params.get("from")==="moena"){
+ if(fromMoena){
   const back=$(".back-link");
   back.href="./moena.html";
   back.innerHTML='<span aria-hidden="true">←</span> Moena live';
  }
- $("#hike-zones").innerHTML=Object.entries(CFG.zones).map(([id,zone])=>`<button class="hike-zone" data-zone="${id}" role="tab" aria-selected="false"><span class="hike-zone-icon">${zone.icon}</span><strong>${esc(zone.name)}</strong></button>`).join("");
+ $("#hike-zones").innerHTML=Object.entries(CFG.zones).map(([id,zone])=>`<button class="hike-zone" data-zone="${id}" role="tab" aria-selected="false"><span class="hike-zone-icon">${zone.icon}</span><strong>${esc(zoneName(zone))}</strong></button>`).join("");
  $("#hike-zones").querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>loadZone(button.dataset.zone)));
  $(".dialog-close").addEventListener("click",()=>$("#detail-dialog").close());
  $("#detail-dialog").addEventListener("click",event=>{
@@ -490,7 +500,7 @@ function init(){
   const rect=dialog.getBoundingClientRect();
   if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();
  });
- const requested=params.get("zona")||"catinaccio";
+ const requested=pageParams.get("zona")||"catinaccio";
  loadZone(requested);
 }
 

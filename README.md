@@ -24,10 +24,11 @@ Pagina diretta:
 
 La pagina rimane per ora autonoma e non è collegata da Pozza Live. Le tre
 stazioni principali sono **Moena - Diga di Pezzè**, **Strada de Even**
-(Moena Meteo) e **Moena - Frazione Pezzè** (MeteoNetwork TRN352). Seguono le
-sei stazioni amatoriali: tutte le nove schede condividono un unico carosello,
-con tre elementi visibili su desktop e due su schermi più piccoli. Le
-amatoriali restano riconoscibili dal bordo e dalla relativa etichetta e non
+(Moena Meteo) e **Moena - Frazione Pezzè** (MeteoNetwork TRN352). Seguono due
+schede compatte, una per le tre Weather Underground e una per le tre Netatmo:
+tutte e cinque le schede condividono un unico carosello, con tre elementi
+visibili su desktop e due su schermi più piccoli. Le amatoriali restano
+riconoscibili dal bordo e dalla relativa etichetta e non
 vengono mediate, perché posizione, quota ed esposizione possono produrre
 valori differenti. Il dettaglio usa lo stesso formato della stazione di Vigo
 in PozzaLive, con temperatura percepita, barra termica, metriche con icone,
@@ -40,7 +41,8 @@ Worker dedicati:
 - `https://meteomoena-previsioni.andrea-vio.workers.dev/forecast`
 
 Escursioni e previsioni su richiesta riutilizzano le pagine comuni; il
-parametro `from=moena` conserva il ritorno a Moena Live.
+parametro `from=moena` conserva il ritorno a Moena Live e mostra il nome
+compatto **S. Pellegrino · Rolle · Latemar** per il settore locale.
 
 ---
 
@@ -285,8 +287,9 @@ esclusivamente dai due Aggregator normalizzati:
 - previsioni: `https://gite-previsioni-aggregator.andrea-vio.workers.dev/`
 
 Le quattro zone sono Catinaccio, Sella e Sassolungo, Marmolada e Val San
-Nicolò, Moena e Latemar. Colore e simbolo rendono riconoscibile la zona anche
-su uno schermo piccolo.
+Nicolò, Moena e Latemar. Dalla pagina Moena Live, soltanto l'ultima viene
+presentata come **S. Pellegrino · Rolle · Latemar**. Colore e simbolo rendono
+riconoscibile la zona anche su uno schermo piccolo.
 
 La configurazione condivisa si trova in `trip-config.js`. Il frontend usa gli
 endpoint `/zone/...` già configurati nei Worker e non mantiene un secondo
@@ -299,10 +302,13 @@ presentazione, senza eliminare le stazioni dall'Aggregator:
 La stazione MeteoTrentino `trentino:campitello` viene presentata direttamente
 dal Worker come **Val Duron – Malga do Col d’Aura**.
 
-Ogni zona mostra quattro stazioni osservate. I punti previsionali disponibili
-restano invece quelli effettivamente forniti dall'Aggregator: 4 per Catinaccio,
-4 per Sella e Sassolungo, 6 per Marmolada e Val San Nicolò e 3 per Moena e
-Latemar. Per usare bene lo spazio viene visualizzata una sola fascia alla volta,
+Ogni zona mostra quattro stazioni osservate. Nel settore di Moena, **Cima
+Paradiso** viene esplicitata come riferimento del Passo San Pellegrino. I punti
+previsionali disponibili restano invece quelli effettivamente forniti
+dall'Aggregator: 4 per Catinaccio, 4 per Sella e Sassolungo, 6 per Marmolada e
+Val San Nicolò e 5 per S. Pellegrino, Rolle e Latemar. Questi ultimi sono Passo
+Costalunga, Passo San Pellegrino, Passo Rolle, Fuciade e Passo Feudo. Per usare
+bene lo spazio viene visualizzata una sola fascia alla volta,
 selezionabile tra `08–11`, `11–14`, `14–17` e `17–20`, per i primi tre giorni
 disponibili. Il tocco su una scheda apre i dati di dettaglio.
 
