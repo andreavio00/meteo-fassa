@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-const MAIN_URL="https://meteomoena-stazioni.andrea-vio.workers.dev/stations";
+const MAIN_URL="https://meteomoena-stazioni.andrea-vio.workers.dev/stations?contract=1.1";
 const AMATEUR_URL="https://meteomoena-amatoriali.andrea-vio.workers.dev/stations";
 const FORECAST_URL="https://meteomoena-previsioni.andrea-vio.workers.dev/forecast";
 const CACHE_MAX_AGE=6*60*60*1000;
