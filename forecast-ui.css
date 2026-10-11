@@ -214,3 +214,13 @@
   .forecast-preview-temp{font-size:26px}
   .forecast-preview-condition{font-size:13px}
 }
+
+
+/* Launcher verso la pagina autonoma delle previsioni giornaliere */
+.forecast-daily-launcher{display:flex;align-items:center;gap:12px;margin-top:9px;padding:14px;border:1px solid #cddbd0;border-radius:16px;background:linear-gradient(110deg,#fff,#edf2eb);box-shadow:0 3px 12px rgba(35,65,45,.07);color:var(--ink);text-decoration:none}
+.forecast-daily-icon{flex:0 0 auto;font-size:28px}
+.forecast-daily-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.forecast-daily-copy strong{font-size:16px;line-height:1.15;color:#30483a}
+.forecast-daily-copy small{font-size:11px;line-height:1.35;color:var(--ink-soft)}
+.forecast-daily-arrow{font-size:22px;font-weight:800;color:#526b58}
+.forecast-daily-launcher:focus-visible{outline:2px solid #78947c;outline-offset:2px}
