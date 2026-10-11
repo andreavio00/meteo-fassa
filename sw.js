@@ -1,10 +1,13 @@
-const CACHE_NAME="meteo-fassa-pwa-v17";
+const CACHE_NAME="meteo-fassa-pwa-v18";
 const APP_SHELL=[
   "./",
   "./index.html",
   "./moena.html",
   "./escursioni.html",
   "./previsioni.html",
+  "./previsioni-giornaliere.html",
+  "./previsioni-giornaliere.css?v=1",
+  "./previsioni-giornaliere.js?v=1",
   "./offline.html",
   "./manifest.webmanifest",
   "./moena.webmanifest",
@@ -87,7 +90,9 @@ self.addEventListener("fetch",event=>{
   if(request.mode==="navigate"){
     const fallback=url.pathname.endsWith("/escursioni.html")
       ?"./escursioni.html"
-      :url.pathname.endsWith("/previsioni.html")
+      :url.pathname.endsWith("/previsioni-giornaliere.html")
+        ?"./previsioni-giornaliere.html"
+        :url.pathname.endsWith("/previsioni.html")
         ?"./previsioni.html"
         :url.pathname.endsWith("/moena.html")
           ?"./moena.html"
