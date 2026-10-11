@@ -403,7 +403,7 @@ function init(){
  initModal();
  loadStationGroup("main",MAIN_URL,MAIN_CACHE_KEY,renderStations);
  loadStationGroup("amateur",AMATEUR_URL,AMATEUR_CACHE_KEY,renderStations);
- loadForecast();
+ if($("#forecast-details"))loadForecast();
 }
 
 init();
