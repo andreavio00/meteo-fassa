@@ -39,10 +39,13 @@
  </section>
 
 <section class="forecast-section moena-forecast">
-<a class="forecast-daily-launcher" href="./previsioni-giornaliere.html?from=moena">
+<a class="forecast-daily-launcher" href="./previsioni-giornaliere.html?from=moena" aria-label="Apri le previsioni giornaliere di Moena">
+ <span class="forecast-daily-heading"><span aria-hidden="true">☀️</span><strong>Previsioni</strong></span>
  <span id="forecast-preview-icon" class="forecast-daily-icon" aria-hidden="true">🌤️</span>
- <span class="forecast-daily-copy"><strong>Previsioni giornaliere</strong><small id="forecast-preview">Caricamento della previsione utile…</small></span>
+ <span id="forecast-preview" class="forecast-daily-copy"><span class="forecast-daily-period">Caricamento…</span><span class="forecast-daily-condition">Previsione in aggiornamento</span></span>
+ <span id="forecast-preview-temp" class="forecast-daily-temp">—°</span>
  <span class="forecast-daily-arrow" aria-hidden="true">→</span>
+ <span id="forecast-preview-rain" class="forecast-daily-rain">☔ Pioggia —</span>
 </a>
 </section>
 
@@ -74,7 +77,7 @@
 </div>
 
 <script src="./moena.js?v=14"></script>
-<script src="./forecast-preview.js?v=1"></script>
+<script src="./forecast-preview.js?v=2"></script>
  <script src="./pwa.js"></script>
 </body>
 </html>
