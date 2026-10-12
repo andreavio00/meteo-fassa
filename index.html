@@ -62,11 +62,14 @@ window.addEventListener("load",()=>setTimeout(()=>{
 <div class="station-swipe-hint" aria-hidden="true">Scorri tutte le stazioni →</div>
 </section>
 
-<section class="forecast-section">
-<a class="forecast-daily-launcher" href="./previsioni-giornaliere.html?from=pozza">
+<section class="forecast-section ">
+<a class="forecast-daily-launcher" href="./previsioni-giornaliere.html?from=pozza" aria-label="Apri le previsioni giornaliere di Pozza di Fassa">
+ <span class="forecast-daily-heading"><span aria-hidden="true">☀️</span><strong>Previsioni</strong></span>
  <span id="forecast-preview-icon" class="forecast-daily-icon" aria-hidden="true">🌤️</span>
- <span class="forecast-daily-copy"><strong>Previsioni giornaliere</strong><small id="forecast-preview">Apri riepilogo dei prossimi giorni e dettaglio orario</small></span>
+ <span id="forecast-preview" class="forecast-daily-copy"><span class="forecast-daily-period">Caricamento…</span><span class="forecast-daily-condition">Previsione in aggiornamento</span></span>
+ <span id="forecast-preview-temp" class="forecast-daily-temp">—°</span>
  <span class="forecast-daily-arrow" aria-hidden="true">→</span>
+ <span id="forecast-preview-rain" class="forecast-daily-rain">☔ Pioggia —</span>
 </a>
 </section>
 
@@ -101,7 +104,7 @@ window.addEventListener("load",()=>setTimeout(()=>{
 <script src="./stations-ui.js"></script>
 <script src="./app.js"></script>
 <script src="./forecast-ui.js"></script>
-<script src="./forecast-preview.js?v=1"></script>
+<script src="./forecast-preview.js?v=2"></script>
 <script src="./pwa.js"></script>
 </body>
 </html>
