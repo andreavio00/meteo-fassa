@@ -260,3 +260,7 @@
 /* Fascia in maiuscolo non grassetto; descrizione meteo in minuscolo grassetto. */
 .forecast-daily-period{font-weight:400;text-transform:uppercase;letter-spacing:.035em}
 .forecast-daily-condition{font-weight:800;text-transform:lowercase}
+
+/* Fascia in maiuscolo non grassetto; descrizione meteo in minuscolo grassetto. */
+.forecast-daily-period{font-weight:400;text-transform:uppercase;letter-spacing:.035em}
+.forecast-daily-condition{font-weight:800;text-transform:lowercase}
