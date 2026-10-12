@@ -253,7 +253,8 @@
 .forecast-daily-condition{font-size:12px;line-height:1.2;font-weight:650;color:#69766e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .forecast-daily-temp{grid-area:temp;align-self:center;justify-self:end;font-size:30px;line-height:1;font-weight:850;letter-spacing:-.04em;color:#30483a;white-space:nowrap}
 .forecast-daily-arrow{grid-area:arrow;font-size:21px;line-height:1;font-weight:800;color:#526b58}
-.forecast-daily-rain{grid-area:rain;justify-self:center;width:100%;box-sizing:border-box;text-align:center;padding:5px 8px;border-radius:9px;font-size:12px;line-height:1.15;font-weight:650;color:#64736e;background:rgba(105,130,118,.07)}
+.forecast-daily-rain{grid-area:rain;display:none;justify-self:center;width:100%;box-sizing:border-box;text-align:center;padding:5px 8px;border-radius:9px;font-size:12px;line-height:1.15;font-weight:650;color:#64736e;background:rgba(105,130,118,.07)}
+.forecast-daily-rain-active{display:block}
 .forecast-daily-rain-active{color:#17677b;background:#dff0f4;font-weight:850}
 @media(max-width:360px){.forecast-daily-launcher{grid-template-columns:40px minmax(0,1fr) auto 15px;column-gap:7px;padding:11px 10px}.forecast-daily-icon{font-size:37px}.forecast-daily-temp{font-size:27px}.forecast-daily-period{font-size:12px}.forecast-daily-condition{font-size:11px}}
 
