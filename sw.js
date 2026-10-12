@@ -1,4 +1,4 @@
-const CACHE_NAME="meteo-fassa-pwa-v21";
+const CACHE_NAME="meteo-fassa-pwa-v22";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -21,7 +21,7 @@ const APP_SHELL=[
   "./stations-ui.js",
   "./app.js",
   "./forecast-ui.js",
-  "./forecast-preview.js?v=2",
+  "./forecast-preview.js?v=3",
   "./moena.js?v=14",
   "./escursioni.js",
   "./previsioni.js",
