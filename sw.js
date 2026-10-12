@@ -1,4 +1,4 @@
-const CACHE_NAME="meteo-fassa-pwa-v18";
+const CACHE_NAME="meteo-fassa-pwa-v19";
 const APP_SHELL=[
   "./",
   "./index.html",
@@ -6,8 +6,8 @@ const APP_SHELL=[
   "./escursioni.html",
   "./previsioni.html",
   "./previsioni-giornaliere.html",
-  "./previsioni-giornaliere.css?v=1",
-  "./previsioni-giornaliere.js?v=1",
+  "./previsioni-giornaliere.css?v=2",
+  "./previsioni-giornaliere.js?v=2",
   "./offline.html",
   "./manifest.webmanifest",
   "./moena.webmanifest",
