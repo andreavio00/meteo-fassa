@@ -224,3 +224,12 @@
 .forecast-daily-copy small{font-size:11px;line-height:1.35;color:var(--ink-soft)}
 .forecast-daily-arrow{font-size:22px;font-weight:800;color:#526b58}
 .forecast-daily-launcher:focus-visible{outline:2px solid #78947c;outline-offset:2px}
+
+/* Anteprima compatta della fascia di giornata nella home */
+.forecast-daily-preview{display:flex;flex-direction:column;gap:4px}
+.forecast-daily-period{font-size:11px;font-weight:800;color:#506658}
+.forecast-daily-values{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.forecast-daily-values strong{font-size:21px;line-height:1.05;color:#30483a}
+.forecast-daily-values span{font-size:12px;font-weight:750;color:#537e88}
+.forecast-daily-condition{font-size:11px;color:#69766e}
+.forecast-daily-launcher .forecast-daily-icon{font-size:34px}
