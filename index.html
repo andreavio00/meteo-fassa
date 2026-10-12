@@ -64,7 +64,7 @@ window.addEventListener("load",()=>setTimeout(()=>{
 
 <section class="forecast-section">
 <a class="forecast-daily-launcher" href="./previsioni-giornaliere.html?from=pozza">
- <span class="forecast-daily-icon" aria-hidden="true">🌤️</span>
+ <span id="forecast-preview-icon" class="forecast-daily-icon" aria-hidden="true">🌤️</span>
  <span class="forecast-daily-copy"><strong>Previsioni giornaliere</strong><small id="forecast-preview">Apri riepilogo dei prossimi giorni e dettaglio orario</small></span>
  <span class="forecast-daily-arrow" aria-hidden="true">→</span>
 </a>
@@ -101,6 +101,7 @@ window.addEventListener("load",()=>setTimeout(()=>{
 <script src="./stations-ui.js"></script>
 <script src="./app.js"></script>
 <script src="./forecast-ui.js"></script>
+<script src="./forecast-preview.js?v=1"></script>
 <script src="./pwa.js"></script>
 </body>
 </html>
