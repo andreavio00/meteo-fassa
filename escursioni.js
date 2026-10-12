@@ -284,10 +284,53 @@ function renderObserved(){
  }));
 }
 
+function daySummary(date){
+ const dayPeriods=forecastLocations.flatMap(location=>(location.periods_3h||[])
+  .filter(period=>period.date===date)
+  .map(period=>({location,period,data:weatherData(period)})));
+ const temperaturesMin=dayPeriods.map(item=>finite(item.data.temperatureMin)?Number(item.data.temperatureMin):finite(item.data.temperature)?Number(item.data.temperature):null).filter(value=>value!==null);
+ const temperaturesMax=dayPeriods.map(item=>finite(item.data.temperatureMax)?Number(item.data.temperatureMax):finite(item.data.temperature)?Number(item.data.temperature):null).filter(value=>value!==null);
+ const probabilities=dayPeriods.map(item=>finite(item.data.probability)?Number(item.data.probability):null).filter(value=>value!==null);
+ const totalsByLocation=forecastLocations.map(location=>{
+  const periods=(location.periods_3h||[]).filter(period=>period.date===date);
+  return periods.reduce((sum,period)=>sum+(finite(weatherData(period).rain)?Math.max(0,Number(weatherData(period).rain)):0),0);
+ }).filter(total=>total>0);
+ const weatherCounts=new Map();
+ dayPeriods.forEach(item=>{
+  const weather=item.data.weather||{};
+  const label=weather.label_it||"Condizioni variabili";
+  const current=weatherCounts.get(label)||{weather,count:0,severity:Number(weather.severity)||0};
+  current.count++;
+  current.severity=Math.max(current.severity,Number(weather.severity)||0);
+  weatherCounts.set(label,current);
+ });
+ const representative=[...weatherCounts.values()].sort((a,b)=>b.count-a.count||a.severity-b.severity)[0]?.weather||{};
+ return {
+  min:temperaturesMin.length?Math.min(...temperaturesMin):null,
+  max:temperaturesMax.length?Math.max(...temperaturesMax):null,
+  probability:probabilities.length?Math.max(...probabilities):null,
+  rain:totalsByLocation.length?Math.max(...totalsByLocation):0,
+  weather:representative
+ };
+}
+
 function renderDays(){
  const dates=availableDates();
  const box=$("#day-tabs");
- box.innerHTML=dates.map(date=>`<button class="day-tab ${date===selectedDate?"active":""}" data-date="${date}" role="tab" aria-selected="${date===selectedDate}">${esc(dayLabel(date))}</button>`).join("");
+ box.innerHTML=dates.map(date=>{
+  const summary=daySummary(date);
+  const rainLine=(summary.probability!==null&&summary.probability>0)||(summary.rain>0)
+   ?`<span class="day-summary-rain">☔ ${summary.probability!==null&&summary.probability>0?`${fmt(summary.probability,0)}%`:""}${summary.probability!==null&&summary.probability>0&&summary.rain>0?" · ":""}${summary.rain>0?`${fmt(summary.rain)} mm`:""}</span>`
+   :"";
+  const tempLine=summary.min!==null||summary.max!==null
+   ?`<span class="day-summary-temp">↘ ${summary.min!==null?fmt(summary.min):"—"}° <span>↗ ${summary.max!==null?fmt(summary.max):"—"}°</span></span>`
+   :`<span class="day-summary-temp">Temperature n/d</span>`;
+  return `<button class="day-tab ${date===selectedDate?"active":""}" data-date="${date}" role="tab" aria-selected="${date===selectedDate}">
+   <span class="day-summary-name">${esc(dayLabel(date))}</span>
+   <span class="day-summary-weather"><span>${esc(summary.weather.icon||"🌦️")}</span><span>${esc(summary.weather.label_it||"Meteo variabile")}</span></span>
+   ${tempLine}${rainLine}
+  </button>`;
+ }).join("");
  box.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>{
   selectedDate=button.dataset.date;
   selectedPeriod=selectedDate===localNow().slice(0,10)&&currentMinutes()<20*60?currentPeriodId():PERIODS[0].id;
