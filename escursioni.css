@@ -219,3 +219,41 @@ dialog::backdrop{background:rgba(15,25,35,.55)}
  .forecast-point-metrics{grid-template-columns:1fr}
  .dialog-grid{grid-template-columns:1fr}
 }
+
+
+/* Selettore giorni delle previsioni GITE: più leggibile ma compatto su smartphone */
+.day-tabs{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  overflow:visible;
+  padding:2px 1px 6px;
+}
+.day-tab{
+  min-width:0;
+  min-height:43px;
+  padding:7px 4px;
+  border:1px solid #d3ddcf;
+  border-radius:10px;
+  background:#f3f5ef;
+  color:#455b49;
+  font-size:11px;
+  font-weight:750;
+  line-height:1.2;
+  text-align:center;
+  white-space:normal;
+  box-shadow:none;
+}
+.day-tab.active{
+  background:#486b53;
+  border:2px solid #304d38;
+  padding:6px 3px;
+  color:#fff;
+  box-shadow:0 2px 6px rgba(42,72,49,.18);
+}
+.day-tab:focus-visible{outline:2px solid #78947c;outline-offset:2px}
+@media(max-width:360px){
+  .day-tabs{gap:4px}
+  .day-tab{min-height:40px;padding:6px 2px;font-size:10px}
+  .day-tab.active{padding:5px 1px}
+}
